@@ -2,7 +2,9 @@
 
 ; step-length - linearly modelled - maybe not the best way to do it?
 
-
+; Notes
+;
+; Running ticks until 5875 is approx equal to running from the first release date to the first of Jan 2024
 
 extensions [
   gis ; Loading extra packages
@@ -14,16 +16,20 @@ globals [
   elev ; Elevation values
   outline ; Outline of corsica
   distance-rd ; Distance to road
+  sites ; Release sites shp
   test_file ; Just a global variable for exporting the n-visit.asc file
   season ; tracks whether it's summer or winter -
   season-counter ; Counts how many 12 hours have passed, and therefore whether it's the next season (2 ticks a day, therefore swaps season after 365 ticks)
   focal-deer ; the deer currently being modelled
   step-distances ;  list of step distances for investigation
-  err
+
 ]
 
 breed [
   deer a-deer ; Assigning deer as a breed (singlular and plural)
+]
+breed [
+  release-sites release-site ; Release sites
 ]
 
 
@@ -43,6 +49,10 @@ deer-own [
   prior-patch ; For calculating step distances
 ]
 
+release-sites-own [
+  sex_deer ; The sex of the deer released from this site (different beacuse it's a different variable assoicated with the patch)
+  time ; The time (in ticks) the deer is to be released
+]
 
 to setup
 
@@ -54,10 +64,10 @@ to setup
   ; long as all of your datasets use the same coordinate system.
 
   ; Read in the spatial data.
-  set lcover gis:load-dataset "landcover_JW.asc" ; Loading the rasters and assigning them to global variables
-  set slo gis:load-dataset "slope_JW.asc"
-  set distance-rd gis:load-dataset "distance_JW.asc"
-  set elev gis:load-dataset "elevation_JW.asc"
+  set lcover gis:load-dataset "landcover.asc" ; Loading the rasters and assigning them to global variables
+  set slo gis:load-dataset "slope.asc"
+  set distance-rd gis:load-dataset "distance.asc"
+  set elev gis:load-dataset "elevation.asc"
 
 
   ; make each raster cell = patch in NetLogo
@@ -110,18 +120,14 @@ to setup
   set step-distances []
 
 
-  ; Deer
-  ;
-  create-deer n-deer ; Creating n deer
-  ask deer [
-    setxy random-xcor random-ycor ; Deer pick a random coord...
-    while [land = "no"] [setxy random-xcor random-ycor] ; Which is not in the water
-    ifelse random 1 = 0 [set sex-of-deer "male" ][ set sex-of-deer "female"] ; Randomly selects the sex
-    set prior-patch patch-here
+  ; Create release points as turtles
 
-  ]
+  set sites gis:load-dataset "release_sites_for_NetLogo.shp"
+  gis:create-turtles-from-points sites release-sites [set shape "circle"]
+
 
   reset-ticks ; Sets the tick counter to 0
+
 
 
 end
@@ -129,6 +135,10 @@ end
 
 
 to go
+
+  ask release-sites [
+    if read-from-string(time) = ticks [ hatch-deer 1 [set sex-of-deer [sex_deer] of myself]]
+  ]
 
   ask deer [ ifelse pen-down? [pen-down][pen-up] ] ; Record pen marks or not
 
@@ -216,10 +226,10 @@ to-report calculate-movement-probability
   let landcover type-of-landcover ; Assigns a patches landcover value to a temp variable
   let slope slope-value ;; Assigns a patches landcover value to a temp variable
   let dist distance-to-road ; Assigns a patches distance to road value to a temp variable
-  let step-length (distance myself) * 100 ; Assigns a patches distance (in m) to the focal deer to a temp variable
+  let step-length log (distance myself) e ; Assigns a patches distance (in m) to the focal deer to a temp variable
   let deer-heading [heading] of focal-deer ; Assigns the focal deers heading to a temp variable
   let patch-heading towards myself - 180 ; First calculates the heading of the patch towards the deer, then -180 to give deer towards patch
-  let turning-angle subtract-headings patch-heading deer-heading  ; Calculates the minimum angle that the deer heading needs to turn by to reach the patch heading, and assigns it to a temp variable
+  let turning-angle cos (subtract-headings patch-heading deer-heading)  ; Calculates the minimum angle that the deer heading needs to turn by to reach the patch heading, and assigns it to a temp variable
   let sex [sex-of-deer] of focal-deer
 
 ; Converting beta values (with se uncertainty) to probabilities for each patch
@@ -230,6 +240,7 @@ to-report calculate-movement-probability
     ((random-normal beta-step-length se-step-length) * step-length ) + ; Effect of distance to patch (step-length)
     ((random-normal beta-turning-angle se-turning-angle) * turning-angle) + ; Effect of turning angle to patch
     ((random-normal runresult (word "beta-" type-of-landcover ":step-length") runresult (word "se-" type-of-landcover ":step-length")) * 1 * step-length ) + ; Interaction between landcover and step length
+    ((random-normal beta-distance:turning-angle se-distance:turning-angle) * dist * turning-angle) + ; Interaction between distance to road and turning angle
     ((random-normal runresult (word "beta-" type-of-landcover ":turning-angle") runresult (word "se-" type-of-landcover ":turning-angle")) * 1 * turning-angle ) + ; The interaction between landcover and turning angle
     ((random-normal beta-slope:step-length se-slope:step-length) * slope * step-length) + ; The interaction between slope and step-length
     ((random-normal runresult (word "beta-" type-of-landcover ":distance-to-road") runresult (word "se-" type-of-landcover ":distance-to-road")) * 1 * dist ) + ; The interaction between landcover and distance to road
@@ -473,7 +484,7 @@ SWITCH
 151
 pen-down?
 pen-down?
-0
+1
 1
 -1000
 
@@ -515,7 +526,7 @@ INPUTBOX
 113
 1004
 beta-distance
--1.391E-4
+-8.757E-5
 1
 0
 Number
@@ -526,7 +537,7 @@ INPUTBOX
 207
 1003
 se-distance
-3.46E-5
+3.602E-5
 1
 0
 Number
@@ -537,7 +548,7 @@ INPUTBOX
 113
 1091
 beta-step-length
--9.78E-4
+-0.2232
 1
 0
 Number
@@ -548,7 +559,7 @@ INPUTBOX
 208
 1089
 se-step-length
-3.787E-4
+0.09461
 1
 0
 Number
@@ -581,7 +592,7 @@ INPUTBOX
 113
 622
 beta-bare
-0.3293
+0.4075
 1
 0
 Number
@@ -592,7 +603,7 @@ INPUTBOX
 208
 624
 se-bare
-0.1159
+0.1057
 1
 0
 Number
@@ -603,7 +614,7 @@ INPUTBOX
 113
 689
 beta-forest
-0.3498
+0.2092
 1
 0
 Number
@@ -614,7 +625,7 @@ INPUTBOX
 208
 691
 se-forest
-0.1082
+0.0985
 1
 0
 Number
@@ -625,7 +636,7 @@ INPUTBOX
 114
 754
 beta-scrub
-0.4883
+0.3394
 1
 0
 Number
@@ -636,7 +647,7 @@ INPUTBOX
 209
 756
 se-scrub
-0.1104
+0.101
 1
 0
 Number
@@ -647,7 +658,7 @@ INPUTBOX
 114
 490
 beta-agricultural
-0.549
+0.295
 1
 0
 Number
@@ -658,7 +669,7 @@ INPUTBOX
 206
 489
 se-agricultural
-0.1167
+0.1087
 1
 0
 Number
@@ -691,7 +702,7 @@ INPUTBOX
 165
 1253
 beta-agricultural:step-length
-0.002164
+0.5323
 1
 0
 Number
@@ -702,7 +713,7 @@ INPUTBOX
 330
 1251
 se-agricultural:step-length
-3.885E-4
+0.1011
 1
 0
 Number
@@ -713,7 +724,7 @@ INPUTBOX
 165
 1384
 beta-bare:step-length
-0.001571
+0.4513
 1
 0
 Number
@@ -724,7 +735,7 @@ INPUTBOX
 329
 1383
 se-bare:step-length
-3.851E-4
+0.09776
 1
 0
 Number
@@ -735,7 +746,7 @@ INPUTBOX
 166
 1447
 beta-forest:step-length
-0.001969
+0.5916
 1
 0
 Number
@@ -746,7 +757,7 @@ INPUTBOX
 329
 1447
 se-forest:step-length
-3.777E-4
+0.09424
 1
 0
 Number
@@ -757,7 +768,7 @@ INPUTBOX
 166
 1511
 beta-scrub:step-length
-0.0015
+0.4756
 1
 0
 Number
@@ -768,7 +779,7 @@ INPUTBOX
 330
 1512
 se-scrub:step-length
-3.785E-4
+0.09505
 1
 0
 Number
@@ -830,7 +841,7 @@ INPUTBOX
 112
 912
 beta-slope
-0.0193
+0.01849
 1
 0
 Number
@@ -841,7 +852,7 @@ INPUTBOX
 206
 915
 se-slope
-0.001396
+0.001374
 1
 0
 Number
@@ -849,52 +860,52 @@ Number
 INPUTBOX
 22
 1129
-114
+127
 1189
 beta-turning-angle
--0.1315
+-2.284
 1
 0
 Number
 
 INPUTBOX
-123
+145
 1127
-209
+240
 1187
 se-turning-angle
-0.04661
+0.1026
 1
 0
 Number
 
 INPUTBOX
-9
-1639
-164
-1699
+13
+1706
+168
+1766
 beta-agricultural:turning-angle
-0.1098
+-0.1037
 1
 0
 Number
 
 INPUTBOX
-174
-1637
-329
-1697
+178
+1704
+333
+1764
 se-agricultural:turning-angle
-0.04848
+0.1083
 1
 0
 Number
 
 INPUTBOX
-10
-1702
-165
-1762
+14
+1769
+169
+1829
 beta-artificial:turning-angle
 0.0
 1
@@ -902,10 +913,10 @@ beta-artificial:turning-angle
 Number
 
 INPUTBOX
-173
-1702
-328
-1762
+177
+1769
+332
+1829
 se-artificial:turning-angle
 0.0
 1
@@ -913,45 +924,45 @@ se-artificial:turning-angle
 Number
 
 INPUTBOX
-10
-1765
-165
-1825
+14
+1832
+169
+1892
 beta-bare:turning-angle
-0.07158
+0.7961
 1
 0
 Number
 
 INPUTBOX
-174
-1767
-329
-1827
+178
+1834
+333
+1894
 se-bare:turning-angle
-0.04726
+0.1042
 1
 0
 Number
 
 INPUTBOX
-10
-1828
-165
-1888
+14
+1895
+169
+1955
 beta-forest:turning-angle
-0.07553
+0.1839
 1
 0
 Number
 
 INPUTBOX
-172
-1831
-327
-1891
+176
+1898
+331
+1958
 se-forest:turning-angle
-0.04583
+0.1015
 1
 0
 Number
@@ -979,32 +990,32 @@ se-wetlands:step-length
 Number
 
 INPUTBOX
-10
-1894
-165
-1954
+14
+1961
+169
+2021
 beta-scrub:turning-angle
-0.1143
+0.2794
 1
 0
 Number
 
 INPUTBOX
-173
-1894
-328
-1954
+177
+1961
+332
+2021
 se-scrub:turning-angle
-0.04616
+0.1019
 1
 0
 Number
 
 INPUTBOX
-10
-1959
-165
-2019
+14
+2026
+169
+2086
 beta-wetlands:turning-angle
 -1.0E27
 1
@@ -1012,10 +1023,10 @@ beta-wetlands:turning-angle
 Number
 
 INPUTBOX
-171
-1958
-326
-2018
+175
+2025
+330
+2085
 se-wetlands:turning-angle
 0.0
 1
@@ -1023,54 +1034,54 @@ se-wetlands:turning-angle
 Number
 
 INPUTBOX
-10
-2058
-165
-2118
+14
+2125
+169
+2185
 beta-slope:step-length
--1.99E-5
+-0.008809
 1
 0
 Number
 
 INPUTBOX
-169
-2059
-324
-2119
+173
+2126
+328
+2186
 se-slope:step-length
-2.304E-6
+8.041E-4
 1
 0
 Number
 
 INPUTBOX
-8
-2152
-163
-2212
+12
+2219
+167
+2279
 beta-agricultural:distance-to-road
--2.355E-4
+1.225E-4
 1
 0
 Number
 
 INPUTBOX
-169
-2152
-324
-2212
+173
+2219
+328
+2279
 se-agricultural:distance-to-road
-3.542E-5
+3.507E-5
 1
 0
 Number
 
 INPUTBOX
-10
-2218
-165
-2278
+14
+2285
+169
+2345
 beta-artificial:distance-to-road
 0.0
 1
@@ -1078,10 +1089,10 @@ beta-artificial:distance-to-road
 Number
 
 INPUTBOX
-170
-2217
-325
-2277
+174
+2284
+329
+2344
 se-artificial:distance-to-road
 0.0
 1
@@ -1089,76 +1100,76 @@ se-artificial:distance-to-road
 Number
 
 INPUTBOX
-10
-2282
-165
-2342
+14
+2349
+169
+2409
 beta-bare:distance-to-road
--7.251E-5
+-4.904E-5
 1
 0
 Number
 
 INPUTBOX
-169
-2280
-324
-2340
+173
+2347
+328
+2407
 se-bare:distance-to-road
-2.77E-5
+2.906E-5
 1
 0
 Number
 
 INPUTBOX
-9
-2348
-164
-2408
+13
+2415
+168
+2475
 beta-forest:distance-to-road
--3.031E-5
+-2.685E-6
 1
 0
 Number
 
 INPUTBOX
-169
-2346
-324
-2406
+173
+2413
+328
+2473
 se-forest:distance-to-road
-2.77E-5
+2.868E-5
 1
 0
 Number
 
 INPUTBOX
-8
-2412
-163
-2472
+12
+2479
+167
+2539
 beta-scrub:distance-to-road
--3.265E-5
+-4.341E-6
 1
 0
 Number
 
 INPUTBOX
-169
-2410
-324
-2470
+173
+2477
+328
+2537
 se-scrub:distance-to-road
-2.747E-5
+2.887E-5
 1
 0
 Number
 
 INPUTBOX
-7
-2476
-162
-2536
+11
+2543
+166
+2603
 beta-wetlands:distance-to-road
 -1.0E27
 1
@@ -1166,10 +1177,10 @@ beta-wetlands:distance-to-road
 Number
 
 INPUTBOX
-168
-2473
-323
-2533
+172
+2540
+327
+2600
 se-wetlands:distance-to-road
 0.0
 1
@@ -1177,23 +1188,23 @@ se-wetlands:distance-to-road
 Number
 
 INPUTBOX
-11
-2574
-166
-2634
+15
+2641
+170
+2701
 beta-slope:turning-angle
-0.00189
+0.01355
 1
 0
 Number
 
 INPUTBOX
-172
-2575
-327
-2635
+176
+2642
+331
+2702
 se-slope:turning-angle
-5.365E-4
+0.001259
 1
 0
 Number
@@ -1204,7 +1215,7 @@ INPUTBOX
 632
 1879
 beta-artificial:step-length:male:summer
--2.562E-4
+-0.2923
 1
 0
 Number
@@ -1215,7 +1226,7 @@ INPUTBOX
 633
 1942
 beta-agricultural:step-length:male:summer
--6.737E-4
+0.1204
 1
 0
 Number
@@ -1226,7 +1237,7 @@ INPUTBOX
 634
 2006
 beta-bare:step-length:male:summer
--0.001808
+-0.1215
 1
 0
 Number
@@ -1237,7 +1248,7 @@ INPUTBOX
 634
 2070
 beta-forest:step-length:male:summer
--0.001359
+-0.2071
 1
 0
 Number
@@ -1248,7 +1259,7 @@ INPUTBOX
 635
 2135
 beta-scrub:step-length:male:summer
--0.001558
+-0.1399
 1
 0
 Number
@@ -1270,7 +1281,7 @@ INPUTBOX
 855
 1878
 se-artificial:step-length:male:summer
-6.841E-4
+0.1607
 1
 0
 Number
@@ -1281,7 +1292,7 @@ INPUTBOX
 854
 1942
 se-agricultural:step-length:male:summer
-1.843E-4
+0.07631
 1
 0
 Number
@@ -1292,7 +1303,7 @@ INPUTBOX
 856
 2006
 se-bare:step-length:male:summer
-2.207E-4
+0.04026
 1
 0
 Number
@@ -1303,7 +1314,7 @@ INPUTBOX
 857
 2070
 se-forest:step-length:male:summer
-1.465E-4
+0.03689
 1
 0
 Number
@@ -1314,7 +1325,7 @@ INPUTBOX
 857
 2134
 se-scrub:step-length:male:summer
-1.424E-4
+0.03128
 1
 0
 Number
@@ -1336,7 +1347,7 @@ INPUTBOX
 1145
 1877
 beta-artificial:step-length:female:summer
--1.169E-4
+0.04903
 1
 0
 Number
@@ -1347,7 +1358,7 @@ INPUTBOX
 1145
 1942
 beta-agricultural:step-length:female:summer
--6.678E-4
+-0.1359
 1
 0
 Number
@@ -1358,7 +1369,7 @@ INPUTBOX
 1146
 2005
 beta-bare:step-length:female:summer
--3.97E-4
+-0.1522
 1
 0
 Number
@@ -1369,7 +1380,7 @@ INPUTBOX
 1146
 2069
 beta-forest:step-length:female:summer
--8.066E-4
+-0.2153
 1
 0
 Number
@@ -1380,7 +1391,7 @@ INPUTBOX
 1148
 2133
 beta-scrub:step-length:female:summer
--6.486E-4
+-0.2047
 1
 0
 Number
@@ -1402,7 +1413,7 @@ INPUTBOX
 1380
 1876
 se-artificial:step-length:female:summer
-3.834E-4
+0.1104
 1
 0
 Number
@@ -1413,7 +1424,7 @@ INPUTBOX
 1379
 1939
 se-agricultural:step-length:female:summer
-1.254E-4
+0.04801
 1
 0
 Number
@@ -1424,7 +1435,7 @@ INPUTBOX
 1380
 2001
 se-bare:step-length:female:summer
-1.059E-4
+0.03687
 1
 0
 Number
@@ -1435,7 +1446,7 @@ INPUTBOX
 1380
 2064
 se-forest:step-length:female:summer
-6.0E-5
+0.01854
 1
 0
 Number
@@ -1446,7 +1457,7 @@ INPUTBOX
 1382
 2127
 se-scrub:step-length:female:summer
-7.035E-5
+0.02452
 1
 0
 Number
@@ -1468,7 +1479,7 @@ INPUTBOX
 631
 2367
 beta-agricultural:step-length:male:winter
--3.648E-6
+0.181
 1
 0
 Number
@@ -1479,7 +1490,7 @@ INPUTBOX
 630
 2303
 beta-artificial:step-length:male:winter
-3.337E-4
+-0.07996
 1
 0
 Number
@@ -1490,7 +1501,7 @@ INPUTBOX
 630
 2436
 beta-bare:step-length:male:winter
-1.395E-5
+0.02443
 1
 0
 Number
@@ -1501,7 +1512,7 @@ INPUTBOX
 631
 2500
 beta-forest:step-length:male:winter
-3.476E-4
+0.1307
 1
 0
 Number
@@ -1512,7 +1523,7 @@ INPUTBOX
 630
 2565
 beta-scrub:step-length:male:winter
-3.495E-4
+0.1028
 1
 0
 Number
@@ -1534,7 +1545,7 @@ INPUTBOX
 853
 2366
 se-agricultural:step-length:male:winter
-1.5E-4
+0.06569
 1
 0
 Number
@@ -1545,7 +1556,7 @@ INPUTBOX
 852
 2301
 se-artificial:step-length:male:winter
-7.808E-4
+0.22
 1
 0
 Number
@@ -1556,7 +1567,7 @@ INPUTBOX
 853
 2432
 se-bare:step-length:male:winter
-1.594E-4
+0.0437
 1
 0
 Number
@@ -1567,7 +1578,7 @@ INPUTBOX
 853
 2496
 se-forest:step-length:male:winter
-9.76E-5
+0.03643
 1
 0
 Number
@@ -1578,7 +1589,7 @@ INPUTBOX
 853
 2560
 se-scrub:step-length:male:winter
-8.051E-5
+0.03462
 1
 0
 Number
@@ -1755,6 +1766,28 @@ INPUTBOX
 820
 se-wetlands
 0.0
+1
+0
+Number
+
+INPUTBOX
+9
+1605
+164
+1665
+beta-distance:turning-angle
+5.316E-5
+1
+0
+Number
+
+INPUTBOX
+174
+1608
+329
+1668
+se-distance:turning-angle
+1.847E-6
 1
 0
 Number
@@ -2116,64 +2149,64 @@ NetLogo 6.4.0
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="experiment - test single deer" repetitions="1" runMetricsEveryStep="true">
+  <experiment name="test - real releases until 01/01/2024" repetitions="1" runMetricsEveryStep="false">
     <setup>clear-all
 random-seed behaviorspace-run-number
 setup</setup>
     <go>go</go>
     <postRun>export-visit-map</postRun>
-    <timeLimit steps="2920"/>
-    <metric>count turtles</metric>
+    <timeLimit steps="5875"/>
+    <metric>count patches with [n-visits &gt; 0]</metric>
     <enumeratedValueSet variable="se-wetlands:turning-angle">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-forest:step-length">
-      <value value="3.777E-4"/>
+      <value value="0.09424"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-slope:turning-angle">
-      <value value="0.00189"/>
+      <value value="0.01355"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-wetlands:turning-angle">
       <value value="-1.0E27"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-distance">
-      <value value="3.46E-5"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-bare:step-length:female:summer">
-      <value value="-3.97E-4"/>
+      <value value="3.602E-5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-scrub">
-      <value value="0.1104"/>
+      <value value="0.101"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-bare:step-length:female:summer">
+      <value value="-0.1522"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-forest:step-length:male:summer">
+      <value value="-0.2071"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-wetlands:distance-to-road">
       <value value="-1.0E27"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-forest:step-length:male:summer">
-      <value value="-0.001359"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="se-scrub:turning-angle">
-      <value value="0.04616"/>
+      <value value="0.1019"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-bare:distance-to-road">
-      <value value="2.77E-5"/>
+      <value value="2.906E-5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-scrub:distance-to-road">
+      <value value="-4.341E-6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-scrub">
+      <value value="0.3394"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-artificial:step-length:female:winter">
       <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-scrub">
-      <value value="0.4883"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-scrub:distance-to-road">
-      <value value="-3.265E-5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-forest:step-length:female:winter">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-forest:distance-to-road">
-      <value value="2.77E-5"/>
+      <value value="2.868E-5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-agricultural:turning-angle">
-      <value value="0.04848"/>
+      <value value="0.1083"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-artificial">
       <value value="0"/>
@@ -2181,89 +2214,89 @@ setup</setup>
     <enumeratedValueSet variable="se-wetlands:step-length:male:summer">
       <value value="0"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-forest:step-length">
-      <value value="0.001969"/>
+    <enumeratedValueSet variable="se-bare:step-length:female:summer">
+      <value value="0.03687"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-forest:step-length:male:summer">
-      <value value="1.465E-4"/>
+      <value value="0.03689"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-forest:step-length">
+      <value value="0.5916"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-scrub:step-length:male:summer">
-      <value value="1.424E-4"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="se-bare:step-length:female:summer">
-      <value value="1.059E-4"/>
+      <value value="0.03128"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-artificial:step-length:female:summer">
-      <value value="-1.169E-4"/>
+      <value value="0.04903"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-forest:distance-to-road">
-      <value value="-3.031E-5"/>
+      <value value="-2.685E-6"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-slope">
+      <value value="0.001374"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-scrub:step-length:female:winter">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-bare:step-length:male:summer">
-      <value value="-0.001808"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="se-slope">
-      <value value="0.001396"/>
+      <value value="-0.1215"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-wetlands:step-length:female:summer">
       <value value="0"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-slope">
-      <value value="0.0193"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="se-forest">
-      <value value="0.1082"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="beta-artificial">
       <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-slope">
+      <value value="0.01849"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-forest">
+      <value value="0.0985"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-wetlands:step-length">
       <value value="-1.0E27"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-agricultural:step-length">
-      <value value="3.885E-4"/>
+      <value value="0.1011"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-agricultural:step-length:female:winter">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="pen-down?">
-      <value value="true"/>
+      <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-artificial:step-length:male:summer">
-      <value value="-2.562E-4"/>
+      <value value="-0.2923"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-artificial:distance-to-road">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-agricultural:step-length:male:summer">
-      <value value="1.843E-4"/>
+      <value value="0.07631"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-scrub:step-length">
-      <value value="0.0015"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-bare">
-      <value value="0.3293"/>
+      <value value="0.4756"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-wetlands">
       <value value="-1.0E27"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-agricultural:step-length:male:winter">
-      <value value="-3.648E-6"/>
+    <enumeratedValueSet variable="beta-bare">
+      <value value="0.4075"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-artificial:step-length:male:winter">
+      <value value="0.22"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-agricultural:step-length:female:winter">
       <value value="0"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="se-artificial:step-length:male:winter">
-      <value value="7.808E-4"/>
+    <enumeratedValueSet variable="beta-agricultural:step-length:male:winter">
+      <value value="0.181"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-wetlands:step-length:male:summer">
       <value value="-1.0E27"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-bare:step-length:male:winter">
-      <value value="1.594E-4"/>
+      <value value="0.0437"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-wetlands:step-length:male:winter">
       <value value="0"/>
@@ -2272,37 +2305,37 @@ setup</setup>
       <value value="-1.0E27"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-forest:step-length:male:winter">
-      <value value="9.76E-5"/>
+      <value value="0.03643"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-artificial:step-length">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-scrub:step-length:male:summer">
-      <value value="-0.001558"/>
+      <value value="-0.1399"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-bare:turning-angle">
-      <value value="0.04726"/>
+      <value value="0.1042"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-bare:step-length:male:winter">
-      <value value="1.395E-5"/>
+      <value value="0.02443"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-slope:turning-angle">
+      <value value="0.001259"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-agricultural">
+      <value value="0.1087"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-wetlands:step-length:female:winter">
       <value value="0"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="se-agricultural">
-      <value value="0.1167"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="se-slope:turning-angle">
-      <value value="5.365E-4"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-bare:step-length:female:winter">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-forest:step-length:male:winter">
-      <value value="3.476E-4"/>
+      <value value="0.1307"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-forest:turning-angle">
-      <value value="0.07553"/>
+      <value value="0.1839"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-artificial:turning-angle">
       <value value="0"/>
@@ -2314,112 +2347,118 @@ setup</setup>
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-artificial:step-length:male:winter">
-      <value value="3.337E-4"/>
+      <value value="-0.07996"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-bare:distance-to-road">
-      <value value="-7.251E-5"/>
+      <value value="-4.904E-5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-artificial:distance-to-road">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-forest">
-      <value value="0.3498"/>
+      <value value="0.2092"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-bare:step-length:female:winter">
       <value value="0"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="se-scrub:step-length:male:winter">
-      <value value="8.051E-5"/>
+    <enumeratedValueSet variable="se-artificial:step-length:female:summer">
+      <value value="0.1104"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-step-length">
-      <value value="-9.78E-4"/>
+      <value value="-0.2232"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="se-artificial:step-length:female:summer">
-      <value value="3.834E-4"/>
+    <enumeratedValueSet variable="se-scrub:step-length:male:winter">
+      <value value="0.03462"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-wetlands:step-length:male:winter">
       <value value="-1.0E27"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-agricultural:distance-to-road">
-      <value value="3.542E-5"/>
+      <value value="3.507E-5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-bare:turning-angle">
-      <value value="0.07158"/>
+      <value value="0.7961"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-forest:step-length:female:summer">
-      <value value="6.0E-5"/>
+      <value value="0.01854"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-artificial:step-length:female:winter">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-scrub:step-length:female:summer">
-      <value value="7.035E-5"/>
+      <value value="0.02452"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-agricultural:step-length">
-      <value value="0.002164"/>
+    <enumeratedValueSet variable="beta-agricultural">
+      <value value="0.295"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-artificial:step-length">
       <value value="0"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-agricultural">
-      <value value="0.549"/>
+    <enumeratedValueSet variable="beta-agricultural:step-length">
+      <value value="0.5323"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-bare:step-length">
-      <value value="3.851E-4"/>
+      <value value="0.09776"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-turning-angle">
-      <value value="0.04661"/>
+      <value value="0.1026"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-slope:step-length">
-      <value value="2.304E-6"/>
+      <value value="8.041E-4"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="max-step-distance">
       <value value="86.5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-forest:turning-angle">
-      <value value="0.04583"/>
+      <value value="0.1015"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-agricultural:turning-angle">
-      <value value="0.1098"/>
+      <value value="-0.1037"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-agricultural:step-length:male:winter">
-      <value value="1.5E-4"/>
+      <value value="0.06569"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-scrub:turning-angle">
-      <value value="0.1143"/>
+      <value value="0.2794"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-agricultural:step-length:female:summer">
-      <value value="-6.678E-4"/>
+      <value value="-0.1359"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-step-length">
-      <value value="3.787E-4"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-turning-angle">
-      <value value="-0.1315"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-distance">
-      <value value="-1.391E-4"/>
+      <value value="0.09461"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-bare:step-length">
-      <value value="0.001571"/>
+      <value value="0.4513"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-distance">
+      <value value="-8.757E-5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-turning-angle">
+      <value value="-2.284"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-distance:turning-angle">
+      <value value="1.847E-6"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-scrub:distance-to-road">
-      <value value="2.747E-5"/>
+      <value value="2.887E-5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-forest:step-length:female:summer">
-      <value value="-8.066E-4"/>
+      <value value="-0.2153"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-wetlands:distance-to-road">
       <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-distance:turning-angle">
+      <value value="5.316E-5"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-wetlands:step-length:female:winter">
       <value value="-1.0E27"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-scrub:step-length">
-      <value value="3.785E-4"/>
+      <value value="0.09505"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="se-agricultural:step-length:female:summer">
-      <value value="1.254E-4"/>
+    <enumeratedValueSet variable="se-artificial:step-length:male:summer">
+      <value value="0.1607"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="n-deer">
       <value value="1"/>
@@ -2427,35 +2466,35 @@ setup</setup>
     <enumeratedValueSet variable="se-artificial:turning-angle">
       <value value="0"/>
     </enumeratedValueSet>
-    <enumeratedValueSet variable="beta-scrub:step-length:male:winter">
-      <value value="3.495E-4"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="se-artificial:step-length:male:summer">
-      <value value="6.841E-4"/>
-    </enumeratedValueSet>
-    <enumeratedValueSet variable="se-bare">
-      <value value="0.1159"/>
-    </enumeratedValueSet>
     <enumeratedValueSet variable="se-forest:step-length:female:winter">
       <value value="0"/>
     </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-scrub:step-length:male:winter">
+      <value value="0.1028"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-bare">
+      <value value="0.1057"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-agricultural:step-length:female:summer">
+      <value value="0.04801"/>
+    </enumeratedValueSet>
     <enumeratedValueSet variable="beta-agricultural:distance-to-road">
-      <value value="-2.355E-4"/>
+      <value value="1.225E-4"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-scrub:step-length:female:winter">
       <value value="0"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="se-bare:step-length:male:summer">
-      <value value="2.207E-4"/>
+      <value value="0.04026"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-agricultural:step-length:male:summer">
-      <value value="-6.737E-4"/>
+      <value value="0.1204"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-scrub:step-length:female:summer">
-      <value value="-6.486E-4"/>
+      <value value="-0.2047"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-slope:step-length">
-      <value value="-1.99E-5"/>
+      <value value="-0.008809"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>
