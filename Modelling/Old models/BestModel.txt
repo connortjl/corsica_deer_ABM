@@ -1,0 +1,278 @@
+Call:
+coxph(formula = Surv(rep(1, 441344L), case_) ~ landcover + slope + 
+    distance + sl_ + ta_ + sl_:landcover + ta_:landcover + sl_:slope + 
+    landcover:distance + ta_:slope + sl_:sex:season:landcover + 
+    strata(id) + strata(step_id_), data = data, method = "exact")
+
+  n= 441344, number of events= 27584 
+
+                                                  coef  exp(coef)   se(coef)
+landcoverAgricultural                        5.490e-01  1.732e+00  1.167e-01
+landcoverForest                              3.498e-01  1.419e+00  1.082e-01
+landcoverScrub                               4.883e-01  1.630e+00  1.104e-01
+landcoverBare                                3.293e-01  1.390e+00  1.159e-01
+landcoverWetlands                                   NA         NA  0.000e+00
+landcoverWater                                      NA         NA  0.000e+00
+
+slope                                        1.930e-02  1.019e+00  1.396e-03
+
+distance                                    -1.391e-04  9.999e-01  3.460e-05
+
+sl_                                         -9.780e-04  9.990e-01  3.787e-04
+
+ta_                                         -1.315e-01  8.768e-01  4.661e-02
+
+landcoverAgricultural:sl_                    2.164e-03  1.002e+00  3.885e-04
+landcoverForest:sl_                          1.969e-03  1.002e+00  3.777e-04
+landcoverScrub:sl_                           1.500e-03  1.002e+00  3.785e-04
+landcoverBare:sl_                            1.571e-03  1.002e+00  3.851e-04
+landcoverWetlands:sl_                               NA         NA  0.000e+00
+landcoverWater:sl_                                  NA         NA  0.000e+00
+
+landcoverAgricultural:ta_                    1.098e-01  1.116e+00  4.848e-02
+landcoverForest:ta_                          7.553e-02  1.078e+00  4.583e-02
+landcoverScrub:ta_                           1.143e-01  1.121e+00  4.616e-02
+landcoverBare:ta_                            7.158e-02  1.074e+00  4.726e-02
+landcoverWetlands:ta_                               NA         NA  0.000e+00
+landcoverWater:ta_                                  NA         NA  0.000e+00
+
+slope:sl_                                   -1.990e-05  1.000e+00  2.304e-06
+
+landcoverAgricultural:distance              -2.355e-04  9.998e-01  3.542e-05
+landcoverForest:distance                    -3.031e-05  1.000e+00  2.726e-05
+landcoverScrub:distance                     -3.265e-05  1.000e+00  2.747e-05
+landcoverBare:distance                      -7.251e-05  9.999e-01  2.770e-05
+landcoverWetlands:distance                          NA         NA  0.000e+00
+landcoverWater:distance                             NA         NA  0.000e+00
+
+slope:ta_                                    1.890e-03  1.002e+00  5.365e-04
+
+landcoverArtificial:sl_:sexm:seasonSummer   -2.562e-04  9.997e-01  6.841e-04
+landcoverAgricultural:sl_:sexm:seasonSummer -6.737e-04  9.993e-01  1.843e-04
+landcoverForest:sl_:sexm:seasonSummer       -1.359e-03  9.986e-01  1.465e-04
+landcoverScrub:sl_:sexm:seasonSummer        -1.558e-03  9.984e-01  1.424e-04
+landcoverBare:sl_:sexm:seasonSummer         -1.808e-03  9.982e-01  2.207e-04
+landcoverWetlands:sl_:sexm:seasonSummer             NA         NA  0.000e+00
+landcoverWater:sl_:sexm:seasonSummer                NA         NA  0.000e+00
+
+landcoverArtificial:sl_:sexf:seasonSummer   -1.169e-04  9.999e-01  3.834e-04
+landcoverAgricultural:sl_:sexf:seasonSummer -6.678e-04  9.993e-01  1.254e-04
+landcoverForest:sl_:sexf:seasonSummer       -8.066e-04  9.992e-01  6.000e-05
+landcoverScrub:sl_:sexf:seasonSummer        -6.486e-04  9.994e-01  7.035e-05
+landcoverBare:sl_:sexf:seasonSummer         -3.970e-04  9.996e-01  1.059e-04
+landcoverWetlands:sl_:sexf:seasonSummer             NA         NA  0.000e+00
+landcoverWater:sl_:sexf:seasonSummer                NA         NA  0.000e+00
+
+landcoverArtificial:sl_:sexm:seasonWinter    3.337e-04  1.000e+00  7.808e-04
+landcoverAgricultural:sl_:sexm:seasonWinter -3.648e-06  1.000e+00  1.500e-04
+landcoverForest:sl_:sexm:seasonWinter        3.476e-04  1.000e+00  9.760e-05
+landcoverScrub:sl_:sexm:seasonWinter         3.495e-04  1.000e+00  8.051e-05
+landcoverBare:sl_:sexm:seasonWinter          1.395e-05  1.000e+00  1.594e-04
+landcoverWetlands:sl_:sexm:seasonWinter             NA         NA  0.000e+00
+landcoverWater:sl_:sexm:seasonWinter                NA         NA  0.000e+00
+
+landcoverArtificial:sl_:sexf:seasonWinter           NA         NA  0.000e+00
+landcoverAgricultural:sl_:sexf:seasonWinter         NA         NA  0.000e+00
+landcoverForest:sl_:sexf:seasonWinter               NA         NA  0.000e+00
+landcoverScrub:sl_:sexf:seasonWinter                NA         NA  0.000e+00
+landcoverBare:sl_:sexf:seasonWinter                 NA         NA  0.000e+00
+landcoverWetlands:sl_:sexf:seasonWinter             NA         NA  0.000e+00
+landcoverWater:sl_:sexf:seasonWinter                NA         NA  0.000e+00
+
+
+
+
+
+
+
+
+
+
+
+
+                                                  z Pr(>|z|)    
+landcoverAgricultural                         4.706 2.53e-06 ***
+landcoverForest                               3.233 0.001226 ** 
+landcoverScrub                                4.424 9.70e-06 ***
+landcoverBare                                 2.841 0.004497 ** 
+landcoverWetlands                                NA       NA    
+landcoverWater                                   NA       NA    
+slope                                        13.823  < 2e-16 ***
+distance                                     -4.022 5.77e-05 ***
+sl_                                          -2.582 0.009818 ** 
+ta_                                          -2.821 0.004792 ** 
+landcoverAgricultural:sl_                     5.571 2.53e-08 ***
+landcoverForest:sl_                           5.214 1.84e-07 ***
+landcoverScrub:sl_                            3.961 7.45e-05 ***
+landcoverBare:sl_                             4.078 4.53e-05 ***
+landcoverWetlands:sl_                            NA       NA    
+landcoverWater:sl_                               NA       NA    
+landcoverAgricultural:ta_                     2.265 0.023514 *  
+landcoverForest:ta_                           1.648 0.099305 .  
+landcoverScrub:ta_                            2.477 0.013253 *  
+landcoverBare:ta_                             1.515 0.129861    
+landcoverWetlands:ta_                            NA       NA    
+landcoverWater:ta_                               NA       NA    
+slope:sl_                                    -8.637  < 2e-16 ***
+landcoverAgricultural:distance               -6.649 2.95e-11 ***
+landcoverForest:distance                     -1.112 0.266267    
+landcoverScrub:distance                      -1.188 0.234654    
+landcoverBare:distance                       -2.618 0.008857 ** 
+landcoverWetlands:distance                       NA       NA    
+landcoverWater:distance                          NA       NA    
+slope:ta_                                     3.523 0.000426 ***
+landcoverArtificial:sl_:sexm:seasonSummer    -0.375 0.707965    
+landcoverAgricultural:sl_:sexm:seasonSummer  -3.655 0.000258 ***
+landcoverForest:sl_:sexm:seasonSummer        -9.275  < 2e-16 ***
+landcoverScrub:sl_:sexm:seasonSummer        -10.943  < 2e-16 ***
+landcoverBare:sl_:sexm:seasonSummer          -8.193 2.55e-16 ***
+landcoverWetlands:sl_:sexm:seasonSummer          NA       NA    
+landcoverWater:sl_:sexm:seasonSummer             NA       NA    
+landcoverArtificial:sl_:sexf:seasonSummer    -0.305 0.760401    
+landcoverAgricultural:sl_:sexf:seasonSummer  -5.325 1.01e-07 ***
+landcoverForest:sl_:sexf:seasonSummer       -13.443  < 2e-16 ***
+landcoverScrub:sl_:sexf:seasonSummer         -9.219  < 2e-16 ***
+landcoverBare:sl_:sexf:seasonSummer          -3.749 0.000178 ***
+landcoverWetlands:sl_:sexf:seasonSummer          NA       NA    
+landcoverWater:sl_:sexf:seasonSummer             NA       NA    
+landcoverArtificial:sl_:sexm:seasonWinter     0.427 0.669062    
+landcoverAgricultural:sl_:sexm:seasonWinter  -0.024 0.980603    
+landcoverForest:sl_:sexm:seasonWinter         3.561 0.000369 ***
+landcoverScrub:sl_:sexm:seasonWinter          4.341 1.42e-05 ***
+landcoverBare:sl_:sexm:seasonWinter           0.088 0.930270    
+landcoverWetlands:sl_:sexm:seasonWinter          NA       NA    
+landcoverWater:sl_:sexm:seasonWinter             NA       NA    
+landcoverArtificial:sl_:sexf:seasonWinter        NA       NA    
+landcoverAgricultural:sl_:sexf:seasonWinter      NA       NA    
+landcoverForest:sl_:sexf:seasonWinter            NA       NA    
+landcoverScrub:sl_:sexf:seasonWinter             NA       NA    
+landcoverBare:sl_:sexf:seasonWinter              NA       NA    
+landcoverWetlands:sl_:sexf:seasonWinter          NA       NA    
+landcoverWater:sl_:sexf:seasonWinter             NA       NA    
+---
+Signif. codes:  0  ***  0.001  **  0.01  *  0.05  .  0.1     1
+
+                                            exp(coef) exp(-coef) lower .95
+landcoverAgricultural                          1.7316     0.5775    1.3776
+landcoverForest                                1.4188     0.7048    1.1477
+landcoverScrub                                 1.6295     0.6137    1.3125
+landcoverBare                                  1.3900     0.7194    1.1075
+landcoverWetlands                                  NA         NA        NA
+landcoverWater                                     NA         NA        NA
+slope                                          1.0195     0.9809    1.0167
+distance                                       0.9999     1.0001    0.9998
+sl_                                            0.9990     1.0010    0.9983
+ta_                                            0.8768     1.1405    0.8003
+landcoverAgricultural:sl_                      1.0022     0.9978    1.0014
+landcoverForest:sl_                            1.0020     0.9980    1.0012
+landcoverScrub:sl_                             1.0015     0.9985    1.0008
+landcoverBare:sl_                              1.0016     0.9984    1.0008
+landcoverWetlands:sl_                              NA         NA        NA
+landcoverWater:sl_                                 NA         NA        NA
+landcoverAgricultural:ta_                      1.1161     0.8960    1.0149
+landcoverForest:ta_                            1.0785     0.9272    0.9858
+landcoverScrub:ta_                             1.1211     0.8920    1.0242
+landcoverBare:ta_                              1.0742     0.9309    0.9792
+landcoverWetlands:ta_                              NA         NA        NA
+landcoverWater:ta_                                 NA         NA        NA
+slope:sl_                                      1.0000     1.0000    1.0000
+landcoverAgricultural:distance                 0.9998     1.0002    0.9997
+landcoverForest:distance                       1.0000     1.0000    0.9999
+landcoverScrub:distance                        1.0000     1.0000    0.9999
+landcoverBare:distance                         0.9999     1.0001    0.9999
+landcoverWetlands:distance                         NA         NA        NA
+landcoverWater:distance                            NA         NA        NA
+slope:ta_                                      1.0019     0.9981    1.0008
+landcoverArtificial:sl_:sexm:seasonSummer      0.9997     1.0003    0.9984
+landcoverAgricultural:sl_:sexm:seasonSummer    0.9993     1.0007    0.9990
+landcoverForest:sl_:sexm:seasonSummer          0.9986     1.0014    0.9984
+landcoverScrub:sl_:sexm:seasonSummer           0.9984     1.0016    0.9982
+landcoverBare:sl_:sexm:seasonSummer            0.9982     1.0018    0.9978
+landcoverWetlands:sl_:sexm:seasonSummer            NA         NA        NA
+landcoverWater:sl_:sexm:seasonSummer               NA         NA        NA
+landcoverArtificial:sl_:sexf:seasonSummer      0.9999     1.0001    0.9991
+landcoverAgricultural:sl_:sexf:seasonSummer    0.9993     1.0007    0.9991
+landcoverForest:sl_:sexf:seasonSummer          0.9992     1.0008    0.9991
+landcoverScrub:sl_:sexf:seasonSummer           0.9994     1.0006    0.9992
+landcoverBare:sl_:sexf:seasonSummer            0.9996     1.0004    0.9994
+landcoverWetlands:sl_:sexf:seasonSummer            NA         NA        NA
+landcoverWater:sl_:sexf:seasonSummer               NA         NA        NA
+landcoverArtificial:sl_:sexm:seasonWinter      1.0003     0.9997    0.9988
+landcoverAgricultural:sl_:sexm:seasonWinter    1.0000     1.0000    0.9997
+landcoverForest:sl_:sexm:seasonWinter          1.0003     0.9997    1.0002
+landcoverScrub:sl_:sexm:seasonWinter           1.0003     0.9997    1.0002
+landcoverBare:sl_:sexm:seasonWinter            1.0000     1.0000    0.9997
+landcoverWetlands:sl_:sexm:seasonWinter            NA         NA        NA
+landcoverWater:sl_:sexm:seasonWinter               NA         NA        NA
+landcoverArtificial:sl_:sexf:seasonWinter          NA         NA        NA
+landcoverAgricultural:sl_:sexf:seasonWinter        NA         NA        NA
+landcoverForest:sl_:sexf:seasonWinter              NA         NA        NA
+landcoverScrub:sl_:sexf:seasonWinter               NA         NA        NA
+landcoverBare:sl_:sexf:seasonWinter                NA         NA        NA
+landcoverWetlands:sl_:sexf:seasonWinter            NA         NA        NA
+landcoverWater:sl_:sexf:seasonWinter               NA         NA        NA
+                                            upper .95
+landcoverAgricultural                          2.1764
+landcoverForest                                1.7540
+landcoverScrub                                 2.0231
+landcoverBare                                  1.7445
+landcoverWetlands                                  NA
+landcoverWater                                     NA
+slope                                          1.0223
+distance                                       0.9999
+sl_                                            0.9998
+ta_                                            0.9607
+landcoverAgricultural:sl_                      1.0029
+landcoverForest:sl_                            1.0027
+landcoverScrub:sl_                             1.0022
+landcoverBare:sl_                              1.0023
+landcoverWetlands:sl_                              NA
+landcoverWater:sl_                                 NA
+landcoverAgricultural:ta_                      1.2273
+landcoverForest:ta_                            1.1798
+landcoverScrub:ta_                             1.2273
+landcoverBare:ta_                              1.1785
+landcoverWetlands:ta_                              NA
+landcoverWater:ta_                                 NA
+slope:sl_                                      1.0000
+landcoverAgricultural:distance                 0.9998
+landcoverForest:distance                       1.0000
+landcoverScrub:distance                        1.0000
+landcoverBare:distance                         1.0000
+landcoverWetlands:distance                         NA
+landcoverWater:distance                            NA
+slope:ta_                                      1.0029
+landcoverArtificial:sl_:sexm:seasonSummer      1.0011
+landcoverAgricultural:sl_:sexm:seasonSummer    0.9997
+landcoverForest:sl_:sexm:seasonSummer          0.9989
+landcoverScrub:sl_:sexm:seasonSummer           0.9987
+landcoverBare:sl_:sexm:seasonSummer            0.9986
+landcoverWetlands:sl_:sexm:seasonSummer            NA
+landcoverWater:sl_:sexm:seasonSummer               NA
+landcoverArtificial:sl_:sexf:seasonSummer      1.0006
+landcoverAgricultural:sl_:sexf:seasonSummer    0.9996
+landcoverForest:sl_:sexf:seasonSummer          0.9993
+landcoverScrub:sl_:sexf:seasonSummer           0.9995
+landcoverBare:sl_:sexf:seasonSummer            0.9998
+landcoverWetlands:sl_:sexf:seasonSummer            NA
+landcoverWater:sl_:sexf:seasonSummer               NA
+landcoverArtificial:sl_:sexm:seasonWinter      1.0019
+landcoverAgricultural:sl_:sexm:seasonWinter    1.0003
+landcoverForest:sl_:sexm:seasonWinter          1.0005
+landcoverScrub:sl_:sexm:seasonWinter           1.0005
+landcoverBare:sl_:sexm:seasonWinter            1.0003
+landcoverWetlands:sl_:sexm:seasonWinter            NA
+landcoverWater:sl_:sexm:seasonWinter               NA
+landcoverArtificial:sl_:sexf:seasonWinter          NA
+landcoverAgricultural:sl_:sexf:seasonWinter        NA
+landcoverForest:sl_:sexf:seasonWinter              NA
+landcoverScrub:sl_:sexf:seasonWinter               NA
+landcoverBare:sl_:sexf:seasonWinter                NA
+landcoverWetlands:sl_:sexf:seasonWinter            NA
+landcoverWater:sl_:sexf:seasonWinter               NA
+
+Concordance= 0.561  (se = 0.002 )
+Likelihood ratio test= 1546  on 37 df,   p=<2e-16
+Wald test            = 1396  on 37 df,   p=<2e-16
+Score (logrank) test = 1458  on 37 df,   p=<2e-16
+
