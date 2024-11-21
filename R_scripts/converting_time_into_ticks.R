@@ -3,7 +3,7 @@ library(lubridate)
 library(terra)
 library(dplyr)
 
-setwd("~/Corsica red deer")
+setwd("~/Corsica deer")
 
 release_points <- vect("corsica_deer_ABM/Modelling/NetLogo/releasePoints/releasePoints.shp")
 #plot(release_points)

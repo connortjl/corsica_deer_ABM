@@ -24,7 +24,7 @@ globals [
   season ; tracks whether it's summer or winter -
   season-counter ; Counts how many 12 hours have passed, and therefore whether it's the next season (2 ticks a day, therefore swaps season after 365 ticks)
   focal-deer ; the deer currently being modelled
-  step-distances ;  list of step distances for investigation
+  ; step-distances ;  list of step distances for evaluation
   target-patches ; The target patches used for deciding which patches to move deer to
 
 ]
@@ -120,7 +120,7 @@ to setup
   ]
 
 
-  set step-distances []
+  ; set step-distances []
 
 
   ; Create release points as turtles

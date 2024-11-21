@@ -4,7 +4,7 @@ library(terra)
 library(raster)
 
 
-setwd("~/Corsica red deer")
+setwd("~/Corsica deer")
 
 #combined_raster <- rast("GIS/CombinedRaster.tif")
 #plot(combined_raster)
