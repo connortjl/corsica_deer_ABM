@@ -1,0 +1,597 @@
+#### Loading and viewing n-visit raster ####
+
+library(terra)
+
+outline <- vect("~/Corsica deer/corsica_deer_ABM/GIS/Administrative boundaries/corsica_outline.shp")
+
+setwd(paste0("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 4 - death/output_maps"))
+
+
+load_asc_files_by_year <- function() {
+  
+  # Mapping from model years to calendar years
+  year_map <- c("3654" = 2020,
+                "7306" = 2025,
+                "10958" = 2030,
+                "14610" = 2035,
+                "18264" = 2040)
+  
+  # List all .asc files
+  asc_files <- list.files(pattern = "\\.asc$", full.names = TRUE)
+  
+  # Load each file into a SpatRaster
+  rasters <- lapply(asc_files, function(f) {
+    r <- rast(f)
+    names(r) <- tools::file_path_sans_ext(basename(f)) # Name the raster after the file
+    r
+  })
+  
+  # Extract year from filenames
+  years <- sapply(asc_files, function(f) {
+    parts <- strsplit(basename(f), "_")[[1]]
+    model_year <- tools::file_path_sans_ext(parts[length(parts)])
+    calendar_year <- year_map[model_year]
+    as.integer(calendar_year)
+  })
+  
+  # Organize rasters into a list by year
+  rasters_by_year <- split(rasters, years)
+  
+  return(rasters_by_year)
+}
+
+load_asc_files_by_id <- function() {
+  asc_files <- list.files(pattern = "\\.asc$", full.names = TRUE)
+  
+  rasters <- lapply(asc_files, function(f) {
+    r <- rast(f)
+    names(r) <- tools::file_path_sans_ext(basename(f))
+    r
+  })
+  
+  # Extract ID from filenames
+  ids <- sapply(asc_files, function(f) {
+    parts <- strsplit(basename(f), "_")[[1]]
+    id <- parts[2]  # ID is the second element: "n-visits_ID_ticks_year"
+    id
+  })
+  
+  # Organize rasters into a list by ID
+  rasters_by_id <- split(rasters, ids)
+  
+  return(rasters_by_id)
+}
+
+
+rasters_by_year <- load_asc_files_by_year()
+rasters_by_id <- load_asc_files_by_id()
+
+
+
+
+
+#### Mean and sd maps ####
+
+setwd("~/Corsica deer/corsica_deer_ABM/Manuscript/Tables and figures")
+
+library(viridis)
+library(terra)
+
+# ID max values for colouring
+maps_2040 <- sds(rasters_by_year$`2040`)
+mean_map_2040 <- app(maps_2040, mean)
+sd_map_2040 <- app(maps_2040, sd)
+
+mean_vals <- values(mean_map_2040, na.rm = TRUE)
+mean_vals <- mean_vals[!is.na(mean_vals) & mean_vals != 0]
+
+sd_vals <- values(sd_map_2040, na.rm = TRUE)
+sd_vals <- sd_vals[!is.na(sd_vals) & sd_vals != 0]
+
+lower_q_mean <- quantile(mean_vals, prob = 0.25)
+lower_q_sd <- quantile(sd_vals, prob = 0.25)
+
+median_q_mean <- quantile(mean_vals, prob = 0.5)
+median_q_sd <- quantile(sd_vals, prob = 0.5)
+
+upper_q_mean <- quantile(mean_vals, prob = 0.75)
+upper_q_sd <- quantile(sd_vals, prob = 0.75)
+
+max_mean <- minmax(mean_map_2040)[2]
+max_sd <- minmax(sd_map_2040)[2]
+
+
+breaks_mean <- c(0, 0.1, lower_q_mean, median_q_mean, upper_q_mean, max_mean)
+breaks_sd <- c(0, 0.1, lower_q_sd, median_q_sd, upper_q_sd, max_sd)
+
+colours <- c("white", viridis(length(breaks_mean) - 2))
+
+mean_legend_labels <- c(
+  "0 visits",
+  paste0("0 - ", round(lower_q_mean)),
+  paste0(round(lower_q_mean), " - ", round(median_q_mean)),
+  paste0(round(median_q_mean), " - ", round(upper_q_mean)),
+  paste0(round(upper_q_mean), " - ", round(max_mean))
+)
+
+sd_legend_labels <- c(
+  "0 visits",
+  paste0("0 - ", round(lower_q_sd)),
+  paste0(round(lower_q_sd), " - ", round(median_q_sd)),
+  paste0(round(median_q_sd), " - ", round(upper_q_sd)),
+  paste0(round(upper_q_sd), " - ", round(max_sd))
+)
+
+# Define a plotting function
+plot_maps <- function(year) {
+  maps <- sds(rasters_by_year[[as.character(year)]])
+  mean_map <- app(maps, mean)
+  sd_map <- app(maps, sd)
+  
+  png(filename = paste0("mean_map_", year, ".png"), width = 2800, height = 2800, res = 800)
+  plot(mean_map, main = paste("Mean cumulative visit frequency\nDecember", year),
+       cex.main = 0.5,
+       col = colours,
+       range = c(0, max_mean),
+       breaks = breaks_mean,
+       legend = FALSE)
+  plot(outline, add = TRUE)
+  legend("topleft", 
+         legend = mean_legend_labels, 
+         fill = colours, 
+         title = "Mean cumulative visit frequency", 
+         cex = 0.35, 
+         bty = "n")
+  dev.off()
+  
+  png(filename = paste0("sd_map_", year, ".png"), width = 2800, height = 2800, res = 800)
+  plot(sd_map, main = paste("Standard deviation cumulative visit frequency\nDecember", year),
+       cex.main = 0.5,
+       col = colours,
+       range = c(0, max_sd),
+       breaks = breaks_sd,
+       legend = FALSE)
+  plot(outline, add = TRUE)
+  legend("topleft", 
+         legend = sd_legend_labels, 
+         fill = colours, 
+         title = "Standard deviation cumulative visit frequency",
+         cex = 0.35,
+         bty = "n")
+  dev.off()
+}
+
+# Now plot for each year
+years <- c(2020, 2025, 2030, 2035, 2040)
+for (year in years) {
+  plot_maps(year)
+}
+
+
+
+#### Min, med, max maps at each timepoint ------------
+
+setwd("~/Corsica deer/corsica_deer_ABM/Manuscript/Tables and figures")
+
+years <- c(2020, 2025, 2030, 2035, 2040)
+
+measure <-  "extent"   #"extent" "cumulative_visits"
+
+for (year in years) {
+  
+  test_rasters <- rasters_by_year[[as.character(year)]]
+  
+  for (i in 1:length(test_rasters)) {
+    
+    if (i == 1) { min_raster <- test_rasters[[i]] }
+    if (i == 1) { max_raster <- test_rasters[[i]] }
+    if (i == 1) { max_raster_value <- max(test_rasters[[i]]) }
+
+    if (measure == "extent") {
+    
+         #minimum extent
+              if ( global(test_rasters[[i]] > 0, "sum", na.rm = TRUE) < global(min_raster > 0, "sum", na.rm = TRUE) ) { 
+                min_raster <- test_rasters[[i]] 
+                #print("min raster updated")
+               }
+    
+              #maximum extent
+              if ( global(test_rasters[[i]] > 0, "sum", na.rm = TRUE) > global(max_raster > 0, "sum", na.rm = TRUE) ) { 
+                max_raster <- test_rasters[[i]] 
+                #print("max raster updated")
+              }
+      
+    } 
+    
+    if (measure == "cumulative_visits") {
+      
+      print(max(values(test_rasters[[i]]))) # Sense check for me
+      
+              #minimum visits
+              if ( global(test_rasters[[i]], "sum", na.rm = TRUE) < global(min_raster, "sum", na.rm = TRUE) ) { 
+                min_raster <- test_rasters[[i]] 
+                #print("min raster updated")
+              }
+      
+              #maximum visits
+              if ( global(test_rasters[[i]], "sum", na.rm = TRUE) > global(max_raster, "sum", na.rm = TRUE) ) { 
+                max_raster <- test_rasters[[i]] 
+                print(max(values(test_rasters[[i]]))) # Sense check for me
+                #print("max raster updated")
+              }
+      
+    }
+  }
+  
+  assign(paste0("min_raster_", year), min_raster)
+  assign(paste0("max_raster_", year), max_raster)
+  
+}
+
+
+#### plotting ###
+
+library(viridis)
+
+# ID max values for colouring
+max_vals <- values(max_raster_2040, na.rm = TRUE)
+max_vals <- max_vals[!is.na(max_vals) & max_vals != 0]
+
+min_vals <- values(min_raster_2040, na.rm = TRUE)
+min_vals <- min_vals[!is.na(min_vals) & min_vals != 0]
+
+lower_q_max <- quantile(max_vals, prob = 0.25)
+lower_q_min <- quantile(min_vals, prob = 0.25)
+
+median_q_max <- quantile(max_vals, prob = 0.5)
+median_q_min <- quantile(min_vals, prob = 0.5)
+
+upper_q_max <- quantile(max_vals, prob = 0.75)
+upper_q_min <- quantile(min_vals, prob = 0.75)
+
+max_max <- max(values(max_raster_2040))
+max_min <- max(values(min_raster_2040))
+
+
+breaks_max <- c(0, 0.1, lower_q_max, median_q_max, upper_q_max, max_max)
+breaks_min <- c(0, 0.1, lower_q_min, median_q_min, upper_q_min, max_min)
+
+colours <- c("white", viridis(length(breaks_max) - 2))
+
+
+max_legend_labels <- c(
+  "0 visits",
+  paste0("0 - ", round(lower_q_max)),
+  paste0(round(lower_q_max), " - ", round(median_q_max)),
+  paste0(round(median_q_max), " - ", round(upper_q_max)),
+  paste0(round(upper_q_max), " - ", round(max_max))
+)
+
+min_legend_labels <- c(
+  "0 visits",
+  paste0("0 - ", round(lower_q_min)),
+  paste0(round(lower_q_min), " - ", round(median_q_min)),
+  paste0(round(median_q_min), " - ", round(upper_q_min)),
+  paste0(round(upper_q_min), " - ", round(max_min))
+)
+
+
+png(filename = "min_max_maps.png", width = 30000, height = 17500, res = 1000)
+
+# Define layout: 2 rows x 6 columns (1 legend + 5 maps)
+layout_matrix <- matrix(c(
+  1, 2, 3, 4, 5, 6,
+  7, 8, 9, 10, 11, 12
+), nrow = 2, byrow = TRUE)
+
+# Set relative widths: wider first column for legends
+layout(layout_matrix, 
+       widths = c(2, rep(2, 5)), 
+       #heights = c(1, rep(2, 5))
+)# Legend column is wider
+
+# Remove all margins
+par(mar = c(0, 0, 0, 0), oma = c(0, 0, 0, 0))
+
+
+
+# First row: max maps
+# First column: legend
+plot(1, type = "n", axes = FALSE, xlab = "", ylab = "", xlim = c(0, 1), ylim = c(0, 1))
+legend("center", 
+       legend = max_legend_labels, 
+       fill = colours, 
+       title = "Cumulative visit frequency\nMax", 
+       cex = 3,
+       bty = "n")
+
+# Columns 2-6: max maps for each year
+for (year in years) {
+  
+  plot(get(paste0("max_raster_", year)),
+       main = paste(year),
+       cex.main = 2.5,
+       col = colours,
+       range = c(0, max_max),
+       breaks = breaks_max,
+       legend = FALSE,
+       asp = NA, 
+       axes = F)
+  
+  plot(outline, add = TRUE)
+}
+
+# Second row: min maps
+# First column: legend
+plot(1, type = "n", axes = FALSE, xlab = "", ylab = "", xlim = c(0, 1), ylim = c(0, 1))
+legend("center", 
+       legend = min_legend_labels, 
+       fill = colours, 
+       title = "Cumulative visit frequency\nMin", 
+       cex = 3,
+       bty = "n")
+
+# Columns 2-6: min maps for each year
+for (year in years) {
+
+  plot(get(paste0("min_raster_", year)),
+       #main = paste0(year),
+       cex.main = 2.5,
+       col = colours,
+       range = c(0, max_min),
+       breaks = breaks_min,
+       legend = FALSE,
+       asp = NA,
+       axes = F)
+  
+  plot(outline, add = TRUE)
+}
+
+dev.off()
+
+
+
+
+
+##### Multiple maps in single PNG ----------------------------------------------------------
+
+png(filename = "all_maps_combined.png", width = 30000, height = 17500, res = 1000)
+
+# Define layout: 2 rows x 6 columns (1 legend + 5 maps)
+layout_matrix <- matrix(c(
+  1, 2, 3, 4, 5, 6,
+  7, 8, 9, 10, 11, 12
+), nrow = 2, byrow = TRUE)
+
+# Set relative widths: wider first column for legends
+layout(layout_matrix, 
+       widths = c(2, rep(2, 5)), 
+       #heights = c(1, rep(2, 5))
+       )# Legend column is wider
+
+# Remove all margins
+par(mar = c(0, 0, 0, 0), oma = c(0, 0, 0, 0))
+
+
+
+# First row: mean maps
+# First column: legend
+plot(1, type = "n", axes = FALSE, xlab = "", ylab = "", xlim = c(0, 1), ylim = c(0, 1))
+legend("center", 
+       legend = mean_legend_labels, 
+       fill = colours, 
+       title = "Cumulative visit frequency\nMean", 
+       cex = 3,
+       bty = "n")
+
+# Columns 2-6: mean maps for each year
+for (year in years) {
+  maps <- sds(rasters_by_year[[as.character(year)]])
+  mean_map <- app(maps, mean)
+  mean_map <- crop(mean_map, outline, mask = T)
+
+  plot(mean_map,
+       main = paste(year),
+       cex.main = 2.5,
+       col = colours,
+       range = c(0, max_mean),
+       breaks = breaks_mean,
+       legend = FALSE,
+       asp = NA, 
+       axes = F)
+
+    plot(outline, add = TRUE)
+}
+
+# Second row: SD maps
+# First column: legend
+plot(1, type = "n", axes = FALSE, xlab = "", ylab = "", xlim = c(0, 1), ylim = c(0, 1))
+legend("center", 
+       legend = sd_legend_labels, 
+       fill = colours, 
+       title = "Cumulative visit frequency\nStandard deviation", 
+       cex = 3,
+       bty = "n")
+
+# Columns 2-6: sd maps for each year
+for (year in years) {
+  maps <- sds(rasters_by_year[[as.character(year)]])
+  sd_map <- app(maps, sd)
+  sd_map <- crop(sd_map, outline)
+  sd_map <- mask(sd_map, outline)
+  sd_map <- trim(sd_map)
+  
+  plot(sd_map, 
+       #main = paste0(year),
+       cex.main = 2.5,
+       col = colours,
+       range = c(0, max_sd),
+       breaks = breaks_sd,
+       legend = FALSE,
+       asp = NA,
+       axes = F)
+  
+  plot(outline, add = TRUE)
+}
+
+dev.off()
+
+
+
+
+##### Change in cumulative visit frequencies --------------------------------------
+
+library(fields)
+
+setwd("~/Corsica deer/corsica_deer_ABM/Manuscript/Tables and figures")
+
+a <- app(sds(rasters_by_year$`2025`), mean) - app(sds(rasters_by_year$`2020`), mean)
+b <- app(sds(rasters_by_year$`2030`), mean) - app(sds(rasters_by_year$`2025`), mean)
+c <- app(sds(rasters_by_year$`2035`), mean) - app(sds(rasters_by_year$`2030`), mean)
+d <- app(sds(rasters_by_year$`2040`), mean) - app(sds(rasters_by_year$`2035`), mean)
+stack <- c(a,b,c,d)
+
+# ID max values for colouring
+
+stack <- values(stack, na.rm = TRUE)
+stack <- stack[!is.na(stack) & stack != 0]
+
+lower_q <- quantile(stack, prob = 0.25)
+
+median_q <- quantile(stack, prob = 0.5)
+
+upper_q <- quantile(stack, prob = 0.75)
+
+max <- max(stack)
+
+
+breaks <- c(0, 0.1, lower_q, median_q, upper_q, max)
+
+colours <- c("white", viridis(length(breaks) - 2))
+
+legend_labels <- c(
+  "0 visits",
+  paste0("0 - ", round(lower_q)),
+  paste0(round(lower_q), " - ", round(median_q)),
+  paste0(round(median_q), " - ", round(upper_q)),
+  paste0(round(upper_q), " - ", round(max))
+)
+
+# Start PNG device
+png("change_between_years.png", width = 9600, height = 2800, res = 600)
+
+# Layout: 1 row with 5 areas: legend + 4 rasters
+layout(matrix(c(1, 2, 3, 4, 5), nrow = 1, byrow = TRUE))
+par(mar = c(4, 2, 4, 4))  # Legend margins
+plot.new()
+
+# Plot shared color legend (leftmost panel)
+legend("center", 
+       legend = legend_labels, 
+       fill = colours, 
+       title = "Mean cumulative visit frequency\nChange between years", 
+       cex = 1.5,
+       bty = "n")
+
+# 2. Plot the rasters
+par(mar = c(1, 1, 2, 1))  # Reset margins for maps
+
+plot(a, col = colours, breaks = breaks, main = "2020–2025", 
+     cex.main = 1.5, xlab = "", ylab = "", legend = FALSE, 
+     axes = F)
+plot(outline, add = TRUE)
+
+plot(b, col = colours, breaks = breaks, main = "2025–2030", 
+     cex.main = 1.5, xlab = "", ylab = "", legend = FALSE, 
+     axes = F)
+plot(outline, add = TRUE)
+
+plot(c, col = colours, breaks = breaks, main = "2030–2035", 
+     cex.main = 1.5, xlab = "", ylab = "", legend = FALSE, 
+     axes = F)
+plot(outline, add = TRUE)
+
+plot(d, col = colours, breaks = breaks, main = "2035–2040", 
+     cex.main = 1.5, xlab = "", ylab = "", legend = FALSE, 
+     axes = F)
+plot(outline, add = TRUE)
+
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### Checking no isolated patches on individual sims -------------------
+
+plot(rast("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 4 - death/output_maps/TEST.asc"), 
+     breaks = c(-Inf, 0.000000000001, Inf), col = c("white", "red"), legend = FALSE)
+
+## There are isolated patches however this doesn't appear in the NetLogo interface (i.e., not an ABM issue).
+## Wonder if it's a resolution issue? 
+## Compared the exported maps and the netlogo interface and it certainly does appear the maps are not high enough resolution.... Unsure how to overcome this?
+
+setwd("~/Corsica deer/corsica_deer_ABM/Manuscript/Tables and figures")
+par(mar=c(1,1,1,1))
+
+png("test", res = 1200)
+plot(rast("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 4 - death/output_maps/TEST.asc"), 
+     breaks = c(-Inf, 0.000000000001, Inf), col = c("white", "red"), legend = FALSE)
+dev.off()
+
+
+
