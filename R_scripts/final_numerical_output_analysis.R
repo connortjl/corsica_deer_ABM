@@ -124,7 +124,7 @@ ggsave(filename = "~/Corsica deer/corsica_deer_ABM/Manuscript/Tables and figures
 
 
 
-#### Home range sizes -------------------------------------------
+##### Home range sizes -------------------------------------------
 
 # Alive deer
 
@@ -164,7 +164,7 @@ row.names(alive_HR_by_sim) <- c("mean_HR_size_ha", "sd_HR_size_ha")
 means <- rowMeans(alive_HR_by_sim)
 
 
-#### Min, median, max situations --------------
+##### Min, median, max situations --------------
 
 min(deer$`2040`)
 mean(deer$`2040`)
