@@ -1,0 +1,334 @@
+Call:
+coxph(formula = Surv(rep(1, 441344L), case_) ~ landcover + slope + 
+    log_distance + log_sl_100m + cos_ta + log_distance2release + 
+    log_sl_100m:landcover + cos_ta:log_distance + cos_ta:landcover + 
+    log_sl_100m:slope + landcover:log_distance + season:slope + 
+    season:log_distance + cos_ta:slope + log_sl_100m:sex:season:landcover + 
+    strata(id) + strata(step_id_), data = data, method = "exact")
+
+  n= 441344, number of events= 27584 
+
+                                                          coef  exp(coef)
+landcoverAgricultural                                1.6042985  4.9743687
+landcoverForest                                      0.1652147  1.1796463
+landcoverScrub                                       0.7095886  2.0331547
+landcoverBare                                        2.0890563  8.0772888
+landcoverWetlands                                           NA         NA
+landcoverWater                                              NA         NA
+slope                                                0.0219817  1.0222251
+log_distance                                        -0.0454730  0.9555454
+log_sl_100m                                         -0.2604349  0.7707163
+cos_ta                                              -2.8578149  0.0573940
+log_distance2release                                -0.4792855  0.6192256
+landcoverAgricultural:log_sl_100m                    0.5654812  1.7602946
+landcoverForest:log_sl_100m                          0.5398509  1.7157509
+landcoverScrub:log_sl_100m                           0.4147853  1.5140456
+landcoverBare:log_sl_100m                            0.5094716  1.6644115
+landcoverWetlands:log_sl_100m                               NA         NA
+landcoverWater:log_sl_100m                                  NA         NA
+log_distance:cos_ta                                  0.1457073  1.1568575
+landcoverAgricultural:cos_ta                        -0.3286335  0.7199068
+landcoverForest:cos_ta                               0.0678126  1.0701647
+landcoverScrub:cos_ta                                0.1283103  1.1369057
+landcoverBare:cos_ta                                 0.6325284  1.8823639
+landcoverWetlands:cos_ta                                    NA         NA
+landcoverWater:cos_ta                                       NA         NA
+slope:log_sl_100m                                   -0.0095123  0.9905328
+landcoverAgricultural:log_distance                  -0.2418938  0.7851396
+landcoverForest:log_distance                         0.0050296  1.0050423
+landcoverScrub:log_distance                         -0.0557381  0.9457868
+landcoverBare:log_distance                          -0.2534125  0.7761477
+landcoverWetlands:log_distance                              NA         NA
+landcoverWater:log_distance                                 NA         NA
+slope:seasonSummer                                  -0.0111080  0.9889534
+log_distance:seasonSummer                            0.1313332  1.1403476
+slope:cos_ta                                         0.0094103  1.0094548
+landcoverArtificial:log_sl_100m:seasonWinter:sexm   -0.2443565  0.7832084
+landcoverAgricultural:log_sl_100m:seasonWinter:sexm  0.0829454  1.0864825
+landcoverForest:log_sl_100m:seasonWinter:sexm       -0.0168767  0.9832650
+landcoverScrub:log_sl_100m:seasonWinter:sexm         0.0292189  1.0296500
+landcoverBare:log_sl_100m:seasonWinter:sexm         -0.0774991  0.9254279
+landcoverWetlands:log_sl_100m:seasonWinter:sexm             NA         NA
+landcoverWater:log_sl_100m:seasonWinter:sexm                NA         NA
+landcoverArtificial:log_sl_100m:seasonSummer:sexm    0.4175230  1.5181964
+landcoverAgricultural:log_sl_100m:seasonSummer:sexm  0.2869507  1.3323585
+landcoverForest:log_sl_100m:seasonSummer:sexm        0.1293754  1.1381172
+landcoverScrub:log_sl_100m:seasonSummer:sexm         0.1475187  1.1589549
+landcoverBare:log_sl_100m:seasonSummer:sexm         -0.0424156  0.9584713
+landcoverWetlands:log_sl_100m:seasonSummer:sexm             NA         NA
+landcoverWater:log_sl_100m:seasonSummer:sexm                NA         NA
+landcoverArtificial:log_sl_100m:seasonWinter:sexf    0.2749789  1.3165029
+landcoverAgricultural:log_sl_100m:seasonWinter:sexf  0.0496206  1.0508723
+landcoverForest:log_sl_100m:seasonWinter:sexf        0.0163494  1.0164838
+landcoverScrub:log_sl_100m:seasonWinter:sexf         0.0486537  1.0498567
+landcoverBare:log_sl_100m:seasonWinter:sexf         -0.0962265  0.9082582
+landcoverWetlands:log_sl_100m:seasonWinter:sexf             NA         NA
+landcoverWater:log_sl_100m:seasonWinter:sexf                NA         NA
+landcoverArtificial:log_sl_100m:seasonSummer:sexf           NA         NA
+landcoverAgricultural:log_sl_100m:seasonSummer:sexf         NA         NA
+landcoverForest:log_sl_100m:seasonSummer:sexf               NA         NA
+landcoverScrub:log_sl_100m:seasonSummer:sexf                NA         NA
+landcoverBare:log_sl_100m:seasonSummer:sexf                 NA         NA
+landcoverWetlands:log_sl_100m:seasonSummer:sexf             NA         NA
+landcoverWater:log_sl_100m:seasonSummer:sexf                NA         NA
+                                                      se(coef)       z Pr(>|z|)
+landcoverAgricultural                                0.2288384   7.011 2.37e-12
+landcoverForest                                      0.2015062   0.820 0.412274
+landcoverScrub                                       0.2222233   3.193 0.001407
+landcoverBare                                        0.2517286   8.299  < 2e-16
+landcoverWetlands                                    0.0000000      NA       NA
+landcoverWater                                       0.0000000      NA       NA
+slope                                                0.0018447  11.916  < 2e-16
+log_distance                                         0.0357704  -1.271 0.203640
+log_sl_100m                                          0.1106349  -2.354 0.018572
+cos_ta                                               0.1084033 -26.363  < 2e-16
+log_distance2release                                 0.0166559 -28.776  < 2e-16
+landcoverAgricultural:log_sl_100m                    0.1160827   4.871 1.11e-06
+landcoverForest:log_sl_100m                          0.1101627   4.900 9.56e-07
+landcoverScrub:log_sl_100m                           0.1109478   3.739 0.000185
+landcoverBare:log_sl_100m                            0.1130705   4.506 6.61e-06
+landcoverWetlands:log_sl_100m                        0.0000000      NA       NA
+landcoverWater:log_sl_100m                           0.0000000      NA       NA
+log_distance:cos_ta                                  0.0065687  22.182  < 2e-16
+landcoverAgricultural:cos_ta                         0.1093445  -3.005 0.002652
+landcoverForest:cos_ta                               0.1033337   0.656 0.511664
+landcoverScrub:cos_ta                                0.1039674   1.234 0.217151
+landcoverBare:cos_ta                                 0.1056878   5.985 2.17e-09
+landcoverWetlands:cos_ta                             0.0000000      NA       NA
+landcoverWater:cos_ta                                0.0000000      NA       NA
+slope:log_sl_100m                                    0.0008137 -11.691  < 2e-16
+landcoverAgricultural:log_distance                   0.0384694  -6.288 3.22e-10
+landcoverForest:log_distance                         0.0344400   0.146 0.883889
+landcoverScrub:log_distance                          0.0365317  -1.526 0.127073
+landcoverBare:log_distance                           0.0394599  -6.422 1.34e-10
+landcoverWetlands:log_distance                       0.0000000      NA       NA
+landcoverWater:log_distance                          0.0000000      NA       NA
+slope:seasonSummer                                   0.0022304  -4.980 6.35e-07
+log_distance:seasonSummer                            0.0307811   4.267 1.98e-05
+slope:cos_ta                                         0.0012654   7.437 1.03e-13
+landcoverArtificial:log_sl_100m:seasonWinter:sexm    0.1649396  -1.481 0.138476
+landcoverAgricultural:log_sl_100m:seasonWinter:sexm  0.0820642   1.011 0.312142
+landcoverForest:log_sl_100m:seasonWinter:sexm        0.0374587  -0.451 0.652321
+landcoverScrub:log_sl_100m:seasonWinter:sexm         0.0335577   0.871 0.383913
+landcoverBare:log_sl_100m:seasonWinter:sexm          0.0404251  -1.917 0.055225
+landcoverWetlands:log_sl_100m:seasonWinter:sexm      0.0000000      NA       NA
+landcoverWater:log_sl_100m:seasonWinter:sexm         0.0000000      NA       NA
+landcoverArtificial:log_sl_100m:seasonSummer:sexm    0.4035342   1.035 0.300825
+landcoverAgricultural:log_sl_100m:seasonSummer:sexm  0.0657228   4.366 1.27e-05
+landcoverForest:log_sl_100m:seasonSummer:sexm        0.0356902   3.625 0.000289
+landcoverScrub:log_sl_100m:seasonSummer:sexm         0.0309412   4.768 1.86e-06
+landcoverBare:log_sl_100m:seasonSummer:sexm          0.0421069  -1.007 0.313775
+landcoverWetlands:log_sl_100m:seasonSummer:sexm      0.0000000      NA       NA
+landcoverWater:log_sl_100m:seasonSummer:sexm         0.0000000      NA       NA
+landcoverArtificial:log_sl_100m:seasonWinter:sexf    0.1201311   2.289 0.022080
+landcoverAgricultural:log_sl_100m:seasonWinter:sexf  0.0500516   0.991 0.321495
+landcoverForest:log_sl_100m:seasonWinter:sexf        0.0185558   0.881 0.378266
+landcoverScrub:log_sl_100m:seasonWinter:sexf         0.0247887   1.963 0.049676
+landcoverBare:log_sl_100m:seasonWinter:sexf          0.0378131  -2.545 0.010934
+landcoverWetlands:log_sl_100m:seasonWinter:sexf      0.0000000      NA       NA
+landcoverWater:log_sl_100m:seasonWinter:sexf         0.0000000      NA       NA
+landcoverArtificial:log_sl_100m:seasonSummer:sexf    0.0000000      NA       NA
+landcoverAgricultural:log_sl_100m:seasonSummer:sexf  0.0000000      NA       NA
+landcoverForest:log_sl_100m:seasonSummer:sexf        0.0000000      NA       NA
+landcoverScrub:log_sl_100m:seasonSummer:sexf         0.0000000      NA       NA
+landcoverBare:log_sl_100m:seasonSummer:sexf          0.0000000      NA       NA
+landcoverWetlands:log_sl_100m:seasonSummer:sexf      0.0000000      NA       NA
+landcoverWater:log_sl_100m:seasonSummer:sexf         0.0000000      NA       NA
+                                                       
+landcoverAgricultural                               ***
+landcoverForest                                        
+landcoverScrub                                      ** 
+landcoverBare                                       ***
+landcoverWetlands                                      
+landcoverWater                                         
+slope                                               ***
+log_distance                                           
+log_sl_100m                                         *  
+cos_ta                                              ***
+log_distance2release                                ***
+landcoverAgricultural:log_sl_100m                   ***
+landcoverForest:log_sl_100m                         ***
+landcoverScrub:log_sl_100m                          ***
+landcoverBare:log_sl_100m                           ***
+landcoverWetlands:log_sl_100m                          
+landcoverWater:log_sl_100m                             
+log_distance:cos_ta                                 ***
+landcoverAgricultural:cos_ta                        ** 
+landcoverForest:cos_ta                                 
+landcoverScrub:cos_ta                                  
+landcoverBare:cos_ta                                ***
+landcoverWetlands:cos_ta                               
+landcoverWater:cos_ta                                  
+slope:log_sl_100m                                   ***
+landcoverAgricultural:log_distance                  ***
+landcoverForest:log_distance                           
+landcoverScrub:log_distance                            
+landcoverBare:log_distance                          ***
+landcoverWetlands:log_distance                         
+landcoverWater:log_distance                            
+slope:seasonSummer                                  ***
+log_distance:seasonSummer                           ***
+slope:cos_ta                                        ***
+landcoverArtificial:log_sl_100m:seasonWinter:sexm      
+landcoverAgricultural:log_sl_100m:seasonWinter:sexm    
+landcoverForest:log_sl_100m:seasonWinter:sexm          
+landcoverScrub:log_sl_100m:seasonWinter:sexm           
+landcoverBare:log_sl_100m:seasonWinter:sexm         .  
+landcoverWetlands:log_sl_100m:seasonWinter:sexm        
+landcoverWater:log_sl_100m:seasonWinter:sexm           
+landcoverArtificial:log_sl_100m:seasonSummer:sexm      
+landcoverAgricultural:log_sl_100m:seasonSummer:sexm ***
+landcoverForest:log_sl_100m:seasonSummer:sexm       ***
+landcoverScrub:log_sl_100m:seasonSummer:sexm        ***
+landcoverBare:log_sl_100m:seasonSummer:sexm            
+landcoverWetlands:log_sl_100m:seasonSummer:sexm        
+landcoverWater:log_sl_100m:seasonSummer:sexm           
+landcoverArtificial:log_sl_100m:seasonWinter:sexf   *  
+landcoverAgricultural:log_sl_100m:seasonWinter:sexf    
+landcoverForest:log_sl_100m:seasonWinter:sexf          
+landcoverScrub:log_sl_100m:seasonWinter:sexf        *  
+landcoverBare:log_sl_100m:seasonWinter:sexf         *  
+landcoverWetlands:log_sl_100m:seasonWinter:sexf        
+landcoverWater:log_sl_100m:seasonWinter:sexf           
+landcoverArtificial:log_sl_100m:seasonSummer:sexf      
+landcoverAgricultural:log_sl_100m:seasonSummer:sexf    
+landcoverForest:log_sl_100m:seasonSummer:sexf          
+landcoverScrub:log_sl_100m:seasonSummer:sexf           
+landcoverBare:log_sl_100m:seasonSummer:sexf            
+landcoverWetlands:log_sl_100m:seasonSummer:sexf        
+landcoverWater:log_sl_100m:seasonSummer:sexf           
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+                                                    exp(coef) exp(-coef)
+landcoverAgricultural                                 4.97437     0.2010
+landcoverForest                                       1.17965     0.8477
+landcoverScrub                                        2.03315     0.4918
+landcoverBare                                         8.07729     0.1238
+landcoverWetlands                                          NA         NA
+landcoverWater                                             NA         NA
+slope                                                 1.02223     0.9783
+log_distance                                          0.95555     1.0465
+log_sl_100m                                           0.77072     1.2975
+cos_ta                                                0.05739    17.4234
+log_distance2release                                  0.61923     1.6149
+landcoverAgricultural:log_sl_100m                     1.76029     0.5681
+landcoverForest:log_sl_100m                           1.71575     0.5828
+landcoverScrub:log_sl_100m                            1.51405     0.6605
+landcoverBare:log_sl_100m                             1.66441     0.6008
+landcoverWetlands:log_sl_100m                              NA         NA
+landcoverWater:log_sl_100m                                 NA         NA
+log_distance:cos_ta                                   1.15686     0.8644
+landcoverAgricultural:cos_ta                          0.71991     1.3891
+landcoverForest:cos_ta                                1.07016     0.9344
+landcoverScrub:cos_ta                                 1.13691     0.8796
+landcoverBare:cos_ta                                  1.88236     0.5312
+landcoverWetlands:cos_ta                                   NA         NA
+landcoverWater:cos_ta                                      NA         NA
+slope:log_sl_100m                                     0.99053     1.0096
+landcoverAgricultural:log_distance                    0.78514     1.2737
+landcoverForest:log_distance                          1.00504     0.9950
+landcoverScrub:log_distance                           0.94579     1.0573
+landcoverBare:log_distance                            0.77615     1.2884
+landcoverWetlands:log_distance                             NA         NA
+landcoverWater:log_distance                                NA         NA
+slope:seasonSummer                                    0.98895     1.0112
+log_distance:seasonSummer                             1.14035     0.8769
+slope:cos_ta                                          1.00945     0.9906
+landcoverArtificial:log_sl_100m:seasonWinter:sexm     0.78321     1.2768
+landcoverAgricultural:log_sl_100m:seasonWinter:sexm   1.08648     0.9204
+landcoverForest:log_sl_100m:seasonWinter:sexm         0.98326     1.0170
+landcoverScrub:log_sl_100m:seasonWinter:sexm          1.02965     0.9712
+landcoverBare:log_sl_100m:seasonWinter:sexm           0.92543     1.0806
+landcoverWetlands:log_sl_100m:seasonWinter:sexm            NA         NA
+landcoverWater:log_sl_100m:seasonWinter:sexm               NA         NA
+landcoverArtificial:log_sl_100m:seasonSummer:sexm     1.51820     0.6587
+landcoverAgricultural:log_sl_100m:seasonSummer:sexm   1.33236     0.7505
+landcoverForest:log_sl_100m:seasonSummer:sexm         1.13812     0.8786
+landcoverScrub:log_sl_100m:seasonSummer:sexm          1.15895     0.8628
+landcoverBare:log_sl_100m:seasonSummer:sexm           0.95847     1.0433
+landcoverWetlands:log_sl_100m:seasonSummer:sexm            NA         NA
+landcoverWater:log_sl_100m:seasonSummer:sexm               NA         NA
+landcoverArtificial:log_sl_100m:seasonWinter:sexf     1.31650     0.7596
+landcoverAgricultural:log_sl_100m:seasonWinter:sexf   1.05087     0.9516
+landcoverForest:log_sl_100m:seasonWinter:sexf         1.01648     0.9838
+landcoverScrub:log_sl_100m:seasonWinter:sexf          1.04986     0.9525
+landcoverBare:log_sl_100m:seasonWinter:sexf           0.90826     1.1010
+landcoverWetlands:log_sl_100m:seasonWinter:sexf            NA         NA
+landcoverWater:log_sl_100m:seasonWinter:sexf               NA         NA
+landcoverArtificial:log_sl_100m:seasonSummer:sexf          NA         NA
+landcoverAgricultural:log_sl_100m:seasonSummer:sexf        NA         NA
+landcoverForest:log_sl_100m:seasonSummer:sexf              NA         NA
+landcoverScrub:log_sl_100m:seasonSummer:sexf               NA         NA
+landcoverBare:log_sl_100m:seasonSummer:sexf                NA         NA
+landcoverWetlands:log_sl_100m:seasonSummer:sexf            NA         NA
+landcoverWater:log_sl_100m:seasonSummer:sexf               NA         NA
+                                                    lower .95 upper .95
+landcoverAgricultural                                 3.17651   7.78979
+landcoverForest                                       0.79475   1.75095
+landcoverScrub                                        1.31527   3.14288
+landcoverBare                                         4.93167  13.22932
+landcoverWetlands                                          NA        NA
+landcoverWater                                             NA        NA
+slope                                                 1.01854   1.02593
+log_distance                                          0.89085   1.02494
+log_sl_100m                                           0.62047   0.95734
+cos_ta                                                0.04641   0.07098
+log_distance2release                                  0.59934   0.63977
+landcoverAgricultural:log_sl_100m                     1.40209   2.21001
+landcoverForest:log_sl_100m                           1.38256   2.12924
+landcoverScrub:log_sl_100m                            1.21815   1.88182
+landcoverBare:log_sl_100m                             1.33357   2.07733
+landcoverWetlands:log_sl_100m                              NA        NA
+landcoverWater:log_sl_100m                                 NA        NA
+log_distance:cos_ta                                   1.14206   1.17185
+landcoverAgricultural:cos_ta                          0.58103   0.89197
+landcoverForest:cos_ta                                0.87396   1.31041
+landcoverScrub:cos_ta                                 0.92731   1.39387
+landcoverBare:cos_ta                                  1.53018   2.31561
+landcoverWetlands:cos_ta                                   NA        NA
+landcoverWater:cos_ta                                      NA        NA
+slope:log_sl_100m                                     0.98895   0.99211
+landcoverAgricultural:log_distance                    0.72812   0.84663
+landcoverForest:log_distance                          0.93944   1.07523
+landcoverScrub:log_distance                           0.88044   1.01599
+landcoverBare:log_distance                            0.71838   0.83856
+landcoverWetlands:log_distance                             NA        NA
+landcoverWater:log_distance                                NA        NA
+slope:seasonSummer                                    0.98464   0.99329
+log_distance:seasonSummer                             1.07358   1.21126
+slope:cos_ta                                          1.00695   1.01196
+landcoverArtificial:log_sl_100m:seasonWinter:sexm     0.56687   1.08212
+landcoverAgricultural:log_sl_100m:seasonWinter:sexm   0.92506   1.27607
+landcoverForest:log_sl_100m:seasonWinter:sexm         0.91366   1.05817
+landcoverScrub:log_sl_100m:seasonWinter:sexm          0.96411   1.09965
+landcoverBare:log_sl_100m:seasonWinter:sexm           0.85493   1.00173
+landcoverWetlands:log_sl_100m:seasonWinter:sexm            NA        NA
+landcoverWater:log_sl_100m:seasonWinter:sexm               NA        NA
+landcoverArtificial:log_sl_100m:seasonSummer:sexm     0.68840   3.34824
+landcoverAgricultural:log_sl_100m:seasonSummer:sexm   1.17133   1.51553
+landcoverForest:log_sl_100m:seasonSummer:sexm         1.06123   1.22058
+landcoverScrub:log_sl_100m:seasonSummer:sexm          1.09076   1.23141
+landcoverBare:log_sl_100m:seasonSummer:sexm           0.88255   1.04093
+landcoverWetlands:log_sl_100m:seasonSummer:sexm            NA        NA
+landcoverWater:log_sl_100m:seasonSummer:sexm               NA        NA
+landcoverArtificial:log_sl_100m:seasonWinter:sexf     1.04032   1.66601
+landcoverAgricultural:log_sl_100m:seasonWinter:sexf   0.95268   1.15919
+landcoverForest:log_sl_100m:seasonWinter:sexf         0.98018   1.05413
+landcoverScrub:log_sl_100m:seasonWinter:sexf          1.00007   1.10212
+landcoverBare:log_sl_100m:seasonWinter:sexf           0.84338   0.97813
+landcoverWetlands:log_sl_100m:seasonWinter:sexf            NA        NA
+landcoverWater:log_sl_100m:seasonWinter:sexf               NA        NA
+landcoverArtificial:log_sl_100m:seasonSummer:sexf          NA        NA
+landcoverAgricultural:log_sl_100m:seasonSummer:sexf        NA        NA
+landcoverForest:log_sl_100m:seasonSummer:sexf              NA        NA
+landcoverScrub:log_sl_100m:seasonSummer:sexf               NA        NA
+landcoverBare:log_sl_100m:seasonSummer:sexf                NA        NA
+landcoverWetlands:log_sl_100m:seasonSummer:sexf            NA        NA
+landcoverWater:log_sl_100m:seasonSummer:sexf               NA        NA
+
+Concordance= 0.753  (se = 0.002 )
+Likelihood ratio test= 26615  on 41 df,   p=<2e-16
+Wald test            = 21905  on 41 df,   p=<2e-16
+Score (logrank) test = 29289  on 41 df,   p=<2e-16
+
