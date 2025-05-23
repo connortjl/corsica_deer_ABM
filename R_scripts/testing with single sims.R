@@ -2,7 +2,7 @@
 ### Maps ---------------------------------------------------------------
 library(terra)
 
-setwd(paste0("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/output_maps"))
+setwd(paste0("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/output_maps/"))
 outline <- vect("~/Corsica deer/corsica_deer_ABM/GIS/Administrative boundaries/corsica_outline.shp")
 
 files <- list.files()
@@ -10,9 +10,11 @@ files <- list.files()
 load_asc_files_by_year <- function() {
   
   # Mapping from model years to calendar years
-  year_map <- c("3654" = 2020
-                )
-  
+  year_map <- c("3654" = 2020,
+                "7306" = 2025,
+                "10958" = 2030,
+                "14610" = 2035,
+                "18264" = 2040)
   # List all .asc files
   asc_files <- list.files(pattern = "\\.asc$", full.names = TRUE)
   
@@ -43,6 +45,19 @@ rasters_by_year <- load_asc_files_by_year()
 plot(rasters_by_year$`2020`[[1]])
 plot(outline, add = T)
 
+plot(rasters_by_year$`2025`[[1]])
+plot(outline, add = T)
+
+plot(rasters_by_year$`2030`[[1]])
+plot(outline, add = T)
+
+plot(rasters_by_year$`2035`[[1]])
+plot(outline, add = T)
+
+plot(rasters_by_year$`2040`[[1]])
+plot(outline, add = T)
+
+
 ### Home ranges -------------------------------------------------------
 # Alive deer
 
@@ -54,7 +69,7 @@ extract_id <- function(filename) {
   as.numeric(stringr::str_extract(filename, "(?<=_)\\d+(?=\\.csv$)"))
 }
 
-files <- list.files(path = "~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/Results", 
+files <- list.files(path = "~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/Results/tests", 
                     pattern = "home-range-sizes_still", full.names = TRUE)
 
 # Sort files by extracted deer ID
@@ -78,9 +93,18 @@ mean(alive_home_range_sizes$sim_1)
 sd(alive_home_range_sizes$sim_1)
 
 
-# mother-offspring HR distances 
+#### mother-offspring HR distance----------------------------------
 
-HR_distances <- t(read.csv("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/Results/mother_offspring_HR_distances_806616.csv", header = F))
+setwd(paste0("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/Results/tests/"))
+
+files <- list.files(path = "~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/Results/tests/", 
+                    pattern = "mother_", full.names = TRUE)
+
+HR_distances <- t(read.csv(files, header = F))
+
+mean(HR_distances)
+sd(HR_distances)
+
 
 
 ### Step lengths -----------------
