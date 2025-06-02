@@ -82,12 +82,29 @@ row.names(visited_patches_summary) <- c("mean_visited_patches", "sd_visited_patc
 # Summarising all of these into one df
 summary <- rbind(deer_summary, mature_deer_summary, immature_deer_summary, ratio_summary, visited_patches_summary)
 #summary <- round(summary, 2) # Optional rounding so it reads easier
-summary <- as.data.frame(format(summary, scientific = FALSE)) # removing sci notation so it reads easier
+#summary <- as.data.frame(format(summary, scientific = FALSE)) # removing sci notation so it reads easier
+summary <- as.data.frame(summary)
 
 # Tidying up rownames for final df
 library(tibble)
 summary <- rownames_to_column(summary, "type")
 
+##### Growth rates ----------------------
+
+(summary[1,6] / summary[1,2]) ^ (1 / 20) # Annual deer growth rate
+(summary[9,6] - summary[9,2]) / 20 # Extra ha explored/year 
+
+## For minimums
+
+min_2020 <- min(visited_patches$`2020`)
+min_2040 <- min(deer$`2040`)
+
+(min_2040 / min_2020) ^ (1 / 20) # Annual deer growth rate
+
+min_2020 <- min(deer$`2020`)
+min_2040 <- min(deer$`2040`)
+
+(min_2040 / min_2020) ^ (1 / 20) # Annual deer growth rate
 
 
 ##### Plotting -----------------
@@ -274,6 +291,7 @@ padded_data <- lapply(data_list, function(mat) { # pad the length of the shorter
   return(mat) # Ensures to return back the modified object
 })
 mother_offspring_HR <- do.call(cbind, padded_data) # cbind list
+mother_offspring_HR <- mother_offspring_HR * 100 # Convert to m from 100m
 
 # Name columns
 colnames(mother_offspring_HR) <- paste0("sim_", seq_along(files))
@@ -288,6 +306,9 @@ mother_offspring_HR_summary <- rbind(
 mother_offspring_HR_summary <- t(mother_offspring_HR_summary)
 colnames(mother_offspring_HR_summary) <- c("mean_mother_offspring_HR_distances", "sd_mother_offspring_HR_distances")
 summary(mother_offspring_HR_summary)
+
+
+
 ##### Min, median, max situations --------------
 
 # Summary stats

@@ -333,14 +333,18 @@ dev.off() # PNG off
 
 ## CANNOT RUN without the above 'mean and sd maps' section being run - this is where the breaks are assigned
 ## This is mostly the same as the previous plotting procedure
+## CAN add standard deviations - but don't think this adds a lot
 
-png(filename = "all_maps_combined.png", width = 30000, height = 17500, res = 1000) #opens the png device
+png(filename = "all_maps_combined.png", width = 30000, height = 17500, res = 1000) #opens the png device - OLD FOR WHEN SD IS INCLUDED
+png(filename = "all_maps_combined.png", width = 30000, height = 8750, res = 1000) #for when sd not incldued
+
 
 # Define layout: 2 rows x 6 columns (1 legend + 5 maps)
 layout_matrix <- matrix(c(
-  1, 2, 3, 4, 5, 6,
-  7, 8, 9, 10, 11, 12
-), nrow = 2, byrow = TRUE)
+  1, 2, 3, 4, 5, 6
+  #7, 8, 9, 10, 11, 12
+), 
+nrow = 1, byrow = TRUE)
 
 # Set relative widths: wider first column for legends
 layout(layout_matrix, 
@@ -384,41 +388,41 @@ for (year in years) {
 
 # Second row: SD maps
 # First column: legend
-plot(1, type = "n", axes = FALSE, xlab = "", ylab = "", xlim = c(0, 1), ylim = c(0, 1))
-legend("center", 
-       legend = sd_legend_labels, 
-       fill = colours, 
-       title = "Cumulative visit frequency\nStandard deviation", 
-       cex = 3,
-       bty = "n")
-
-# Columns 2-6: sd maps for each year
-for (year in years) {
-  maps <- sds(rasters_by_year[[as.character(year)]])
-  sd_map <- app(maps, sd)
-  sd_map <- crop(sd_map, outline)
-  sd_map <- mask(sd_map, outline)
-  sd_map <- trim(sd_map)
-  
-  plot(sd_map, 
-       #main = paste0(year),
-       cex.main = 2.5,
-       col = colours,
-       range = c(0, max_sd),
-       breaks = breaks_sd,
-       legend = FALSE,
-       asp = NA,
-       axes = F)
-  
-  plot(outline, add = TRUE)
-}
+# plot(1, type = "n", axes = FALSE, xlab = "", ylab = "", xlim = c(0, 1), ylim = c(0, 1))
+# legend("center", 
+#        legend = sd_legend_labels, 
+#        fill = colours, 
+#        title = "Cumulative visit frequency\nStandard deviation", 
+#        cex = 3,
+#        bty = "n")
+# 
+# # Columns 2-6: sd maps for each year
+# for (year in years) {
+#   maps <- sds(rasters_by_year[[as.character(year)]])
+#   sd_map <- app(maps, sd)
+#   sd_map <- crop(sd_map, outline)
+#   sd_map <- mask(sd_map, outline)
+#   sd_map <- trim(sd_map)
+#   
+#   plot(sd_map, 
+#        #main = paste0(year),
+#        cex.main = 2.5,
+#        col = colours,
+#        range = c(0, max_sd),
+#        breaks = breaks_sd,
+#        legend = FALSE,
+#        asp = NA,
+#        axes = F)
+#   
+#   plot(outline, add = TRUE)
+# }
 
 dev.off()
 
 
 
 
-##### Change in cumulative visit frequencies --------------------------------------
+##### NOT CURRENTLY USEFUL - Change in cumulative visit frequencies --------------------------------------
 
 library(fields)
 
