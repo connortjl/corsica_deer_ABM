@@ -1,4 +1,3 @@
-
 ; Version 6 - this is a combination of bestmodel1 for all parameters, plus an unlogged distance2release/centre-of-HR of -0.5
 ; Included recording of step lengths and distance between mother-offspring HRs - step lengths are commented out for now to focus on speed
 
@@ -493,7 +492,7 @@ to-report calculate-movement-probability
 
   let step-length ln (distance myself)  ; Compute log step-length once - going from patch to patch not deer to patch, however should work better because deer not going to middle of patch so the distance is more accurate
   let turning-angle cos (subtract-headings (towards myself - 180) ([heading] of focal-deer))  ; Compute the minimum turning angle between the heading of the deer to the target-patch, and the current heading of the deer
-  let dist-from-release (distancexy [release-site-x] of focal-deer [release-site-y] of focal-deer)  ; Compute the distance from the mature deers release point/centre of HR - NOT logged in this version
+  let dist-from-release (distancexy [release-site-x] of focal-deer [release-site-y] of focal-deer)  ; Compute the distance from the mature deers release point/centre of HR - NOT logged in this version. Actually does from the centre of patch to release site (not where the deer ends up) but not sure how one would overcome that (would be minor) - also doesn't matter as not parametarised in SFF
   let deer-sex [sex-of-deer] of focal-deer ; records the sex of the deer in question
   let road-dist ln distance-to-road ; logged distance2road
 
@@ -1878,7 +1877,7 @@ INPUTBOX
 1344
 1383
 se-wetlands:step-length:winter:female
-0.0372901624933728
+0.0
 1
 0
 Number

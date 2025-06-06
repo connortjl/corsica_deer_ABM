@@ -1,12 +1,12 @@
 #### Loading in data ---------------
 
 # File list to be loaded
-files <- list.files(path = "C:/Users/conno/Documents/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 4 - death/results_final", pattern = "measures_")
+files <- list.files(path = "C:/Users/conno/Documents/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/results/", pattern = "measures_")
 
 # Loading in all the measures files and joining them together
 for (i in 1:length(files)) {
   if (i == 1) { 
-    data <- read.csv(paste0("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 4 - death/results_final/", files[i]), header = F)
+    data <- read.csv(paste0("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/results/", files[i]), header = F)
     data$sim_id <- sub("measures_", "", sub(".csv", "", files[i]))
     colnames(data) <- c("2020", "2025", "2030", "2035", "2040", "sim_id")
     row.names(data) <- c("deer", "mature_deer", "immature_deer", "visited_patches")
@@ -25,7 +25,7 @@ for (i in 1:length(files)) {
     
     
   } else {
-    additional_data <- read.csv(paste0("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 4 - death/results_final/", files[i]), header = F)
+    additional_data <- read.csv(paste0("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/results/", files[i]), header = F)
     additional_data$sim_id <- sub("measures_", "", sub(".csv", "", files[i]))
     colnames(additional_data) <- c("2020", "2025", "2030", "2035", "2040", "sim_id")
     row.names(additional_data) <- c("deer", "mature_deer", "immature_deer", "visited_patches")
@@ -240,7 +240,7 @@ library(patchwork)
 
 (a | b) / (c | d) + plot_layout(nrow = 2)
 
-ggsave(filename = "~/Corsica deer/corsica_deer_ABM/Manuscript/Tables and figures/bootstrapping.png", 
+ggsave(filename = "~/Corsica deer/Manuscript/Tables and figures/bootstrapping.png", 
        dpi = 1000, units = "in")
 
 #### NOT NEEDED? Bootstrapping each output - HR sizes -----------------
