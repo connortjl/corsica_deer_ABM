@@ -1,5 +1,6 @@
-; Version 7 - this is a combination of bestmodel1 for all parameters, plus an unlogged distance2release/centre-of-HR of -0.5, but just for validating
+; Version 7 - this is a combination of bestmodel1 for all parameters, plus an unlogged distance2release/centre-of-HR of -0.5
 ; Records HR sizes and mother-offspring distances
+; Altered target-patches -> target patchset is now calculated once when needed, stored in a patch-level variable, and then reused if a deer lands on the patch a second time. Should reduce the amount of 'in-radius' being ran.
 
 extensions [
   gis ; Loading extra packages
@@ -57,7 +58,9 @@ patches-own [
   land ; are the patches on land?
   movement-prob ; for each deer and each tick, the probability said deer will move to the patch
   n-visits ; Number of deer visiting each patch
-  base-prob ; base probability from unchanging variables
+  base-prob-summer ; base probability from unchanging variables (summer)
+  base-prob-winter ; base probability from unchanging variables (winter)
+  target-patchset ; the target patches for each patch
 ]
 
 deer-own [
@@ -87,7 +90,7 @@ to setup
 
   setup-parameter-table ; Sets up the parameter table for speed gains (see below)
 
-  if use = "validation" [set dt time:create-with-format "16-12-2015 10:00:00" "dd-MM-yyyy HH:mm:ss"] ; Sets the date-time-year
+  if use = "evaluation" [set dt time:create-with-format "16-12-2015 10:00:00" "dd-MM-yyyy HH:mm:ss"] ; Sets the date-time-year
   if use = "prediction" [set dt time:create-with-format "01-01-2025 10:00:00" "dd-MM-yyyy HH:mm:ss"] ; Sets the date-time-year
   set season "winter" ; sets the season
 
@@ -132,16 +135,18 @@ to setup
 
   ; Assigning catagorical landcovers to patches
   ask patches [
-
     (ifelse type-of-landcover = 1 [set type-of-landcover "artificial"]
       type-of-landcover = 2 [set type-of-landcover  "agricultural"]
       type-of-landcover = 3 [set type-of-landcover  "forest"]
       type-of-landcover = 4 [set type-of-landcover  "scrub"]
       type-of-landcover = 5 [set type-of-landcover  "bare"]
-      type-of-landcover = 6 [set type-of-landcover "wetlands"]
+      ;type-of-landcover = 6 [set type-of-landcover "wetlands"]
       [set land "no"]
     )
+  ]
 
+  ask patches [
+    set target-patchset no-patches
   ]
 
 
@@ -156,7 +161,7 @@ to setup
   set total-patches-visited [] ; total visited patches at timepoings
 
   ; Create release points as agents
-  if use = "validation" [
+  if use = "evaluation" [
     set sites gis:load-dataset "new_release_sites_for_NetLogo.shp"
     gis:create-turtles-from-points sites release-sites [set shape "circle"]
   ]
@@ -182,7 +187,7 @@ to setup
   ]
 
 
-  set run-id behaviorspace-run-number ; Assigning each simulation a random ID - given the random floats they should be unique!
+  set run-id behaviorspace-run-number ; Assigning each simulation a random ID
 
   calc-patch-base-prob
 
@@ -292,9 +297,21 @@ to calc-patch-base-prob
   ; (random-normal beta-slope:turning-angle se-slope:turning-angle) * slope-value * turning-angle + ; slope x cos turning angle (cos'd above)
   ; (random-normal beta-complex se-complex) * step-length ; sex x season x landcover x log step length (logged above)
 
-    set base-prob exp probs
+    ; Winter is the intercept for the below bit, so goes first
+    set base-prob-winter exp probs
 
+    ; Obtaining coef from parameter table (speedier)
+    let beta-slope-summer table:get parameter-table (word "beta-slope:summer")
+    let se-slope-summer table:get parameter-table (word "se-slope:summer")
 
+    let beta-road-summer table:get parameter-table (word "beta-distance-to-road:summer")
+    let se-road-summer table:get parameter-table (word "se-distance-to-road:summer")
+
+    ; Then, when summer new coef are used in the calculations
+    set base-prob-summer base-prob-winter * exp ( ; Explicitly refering to summer values
+      (random-normal beta-slope-summer se-slope-summer) * slope-value + ; slope x summer
+      (random-normal beta-road-summer se-road-summer) * road-dist ; log distance2road x season
+    )
   ]
 
 end
@@ -305,7 +322,7 @@ to go
   set hpc-stop "no" ; Re-setting the stop condition for use on HPCs and other desktop computers (without needing the final tick number)
 
   ;Deer release submodel below
-  if use = "prediction" [
+  if use = "evaluation" [
     ask release-sites [ ; Asks the release sites,..
       if time = ticks [ hatch-deer 1 [ ; ...if the tick number = their deer release time, to reintroduce a deer
         set sex-of-deer [ sex_deer ] of myself ; Deer has the assigned sex
@@ -333,8 +350,8 @@ to go
   ; See below procedures for details
 
 
-  ; For validating
-  if use = "validation" [
+  ; For evaluation
+  if use = "evaluation" [
     if time:get "day" dt = 9 and time:get "month" dt = 1 and time:get "year" dt = 2020 and time:get "hour" dt = 10 [ ; If its 2020 on the 16th Dec...
       export-visit-map
       export-home-range-sizes
@@ -352,6 +369,8 @@ to go
   if use = "prediction" [
     if time:get "day" dt = 1 and time:get "month" dt = 1 and time:get "year" dt = 2026 and time:get "hour" dt = 10 [
       export-visit-map
+      export-home-range-sizes
+      export-mother-offspring-HR-distances
       set total-deer lput (count deer) total-deer
       set total-mature-deer lput (count deer with [mature = "yes"]) total-mature-deer
       set total-immature-deer lput (count deer with [mature = "no"]) total-immature-deer
@@ -359,6 +378,8 @@ to go
     ]
     if time:get "day" dt = 1 and time:get "month" dt = 1 and time:get "year" dt = 2027 and time:get "hour" dt = 10 [
       export-visit-map
+      export-home-range-sizes
+      export-mother-offspring-HR-distances
       set total-deer lput (count deer) total-deer
       set total-mature-deer lput (count deer with [mature = "yes"]) total-mature-deer
       set total-immature-deer lput (count deer with [mature = "no"]) total-immature-deer
@@ -366,6 +387,8 @@ to go
     ]
     if time:get "day" dt = 1 and time:get "month" dt = 1 and time:get "year" dt = 2028 and time:get "hour" dt = 10 [
       export-visit-map
+      export-home-range-sizes
+      export-mother-offspring-HR-distances
       set total-deer lput (count deer) total-deer
       set total-mature-deer lput (count deer with [mature = "yes"]) total-mature-deer
       set total-immature-deer lput (count deer with [mature = "no"]) total-immature-deer
@@ -373,6 +396,8 @@ to go
     ]
     if time:get "day" dt = 1 and time:get "month" dt = 1 and time:get "year" dt = 2029 and time:get "hour" dt = 10 [
       export-visit-map
+      export-home-range-sizes
+      export-mother-offspring-HR-distances
       set total-deer lput (count deer) total-deer
       set total-mature-deer lput (count deer with [mature = "yes"]) total-mature-deer
       set total-immature-deer lput (count deer with [mature = "no"]) total-immature-deer
@@ -456,19 +481,23 @@ to move-mature ; Asking the adult mature deer to move
 
     set focal-deer self ; ... to set itself as a focal deer (I need to do this for some code below)
 
-    ask patch-here [ ; The focal deer being simulated asks the patch it is situated on...
+    ask patch-here [ ; The focal deer being simulated...
 
-      set target-patches other patches in-radius max-step-distance with [land = "yes"] ; to create an agentset of land patches within the max-step distance (only patches can ask patches things, hence why the deer has to ask the patch first in the above line)
+      if not any? target-patchset [
+        set target-patchset other patches in-radius max-step-distance with [land = "yes"] ; to create an agentset of land patches within the max-step distance (only patches can ask patches things, hence why the deer has to ask the patch first in the above line)
+       ;set target-patches other patches with [land = "yes" and distance myself <= max-step-distance]
+      ]
 
-      ask target-patches [ ; Asks this 'target-patches' agentset...
+
+      ask target-patchset [ ; Asks this 'target-patches' agentset...
 
         set movement-prob calculate-movement-probability ; ...to each individually calculate the probability for the focal deer to move towards it (see below procedure) - lots of patches = slow model
 
       ]
 
-      let total-movement-prob (sum [movement-prob] of target-patches) ; Finding the sum of the probability for all target patches for that deer for the below code
+      let total-movement-prob (sum [movement-prob] of target-patchset) ; Finding the sum of the probability for all target patches for that deer for the below code
 
-      ask target-patches [ ; Ask these patches...
+      ask target-patchset [ ; Ask these patches...
 
         set movement-prob movement-prob / total-movement-prob ; ... to scale their probabilities to add to one
 
@@ -546,11 +575,13 @@ to death
     if rand-number > (annual-survival-prob) ^ (1 / 730.5) [ ; If this float is greater than the annual survival probability scaled to a 12 hour scale...
       set dead-deer-who fput who dead-deer-who ; ...optional recording of who ID and HR size
       set dead-deer-HR fput (length remove-duplicates home-range-patches) dead-deer-HR ; See above line
-      print (word "deer " who " has died of randomness") ; sense check
+      ;print (word "deer " who " has died of randomness") ; sense check
       die ; kills deer and removes it from the model
     ]
 
-    if mature = "no" and a-deer ([mother] of self) = nobody [die] ; For offspring, if mum dies then they die too. Because they're ordered by WHO ID and because extrinsic death has been ran already, mum will always die first.
+    if mature = "no" and a-deer ([mother] of self) = nobody [
+      die ; For offspring, if mum dies then they die too. Because they're ordered by WHO ID and because extrinsic death has been ran already, mum will always die first.
+    ]
 
   ]]
 
@@ -616,11 +647,11 @@ to-report calculate-movement-probability
   ;let beta-landcover-road table:get parameter-table (word "beta-" type-of-landcover ":distance-to-road")
   ;let se-landcover-road table:get parameter-table (word "se-" type-of-landcover ":distance-to-road")
 
-  let beta-slope-season table:get parameter-table (word "beta-slope:" season)
-  let se-slope-season table:get parameter-table (word "se-slope:" season)
+  ;let beta-slope-season table:get parameter-table (word "beta-slope:" season)
+  ;let se-slope-season table:get parameter-table (word "se-slope:" season)
 
-  let beta-road-season table:get parameter-table (word "beta-distance-to-road:" season)
-  let se-road-season table:get parameter-table (word "se-distance-to-road:" season)
+  ;let beta-road-season table:get parameter-table (word "beta-distance-to-road:" season)
+  ;let se-road-season table:get parameter-table (word "se-distance-to-road:" season)
 
   let beta-complex table:get parameter-table (word "beta-" type-of-landcover ":step-length:" season ":" deer-sex)
   let se-complex table:get parameter-table (word "se-" type-of-landcover ":step-length:" season ":" deer-sex)
@@ -639,14 +670,16 @@ to-report calculate-movement-probability
   (random-normal beta-landcover-turn se-landcover-turn) * turning-angle + ; landcover x cos turning angle (cos'd earlier)
   (random-normal beta-slope:step-length se-slope:step-length) * slope-value * step-length + ; log step length (logged above) x slope
   ;(random-normal beta-landcover-road se-landcover-road) * road-dist + ; landcover x log distance2road
-  (random-normal beta-slope-season se-slope-season) * slope-value + ; slope x season
-  (random-normal beta-road-season se-road-season) * road-dist + ; log distance2road x season
+  ;(random-normal beta-slope-season se-slope-season) * slope-value + ; slope x season
+  ;(random-normal beta-road-season se-road-season) * road-dist + ; log distance2road x season
   (random-normal beta-slope:turning-angle se-slope:turning-angle) * slope-value * turning-angle + ; slope x cos turning angle (cos'd above)
   (random-normal beta-complex se-complex) * step-length ; sex x season x landcover x log step length (logged above)
 
   set probs exp probs ; This exponates the above value to convert it to a relative intensity of use
-  report (probs * base-prob) ; Combines it with the previously calculated base-probability of the patch - e^a * e^b == e^(a + b)
-
+  ifelse season = "winter" [
+    report (probs * base-prob-winter) ; Combines it with the previously calculated base-probability of the patch - e^a * e^b == e^(a + b)
+  ][ report (probs * base-prob-summer)
+  ]
 
 end
 
@@ -659,7 +692,7 @@ to move-deer-based-on-probability; Moves deer to a new patch based on the calcul
   let cumulative-probability 0 ; Sets the cumulative probability
   let selected-patch nobody ; Sets the selected patch as nobody (NetLogo way of saying is no selected patch), for some speed gains and sense checks
 
-  ask target-patches [ ; Only asking patches the focal deer could move to as above
+  ask target-patchset [ ; Only asking patches the focal deer could move to as above
     set cumulative-probability cumulative-probability + movement-prob ; Adds on the normalised movement probability - a higher probability means more likely to pass the r threshold, and the probabilities were normalised in the move-mature procedure
     if (selected-patch = nobody and r < cumulative-probability) [ ; If it does pass the threshold AND a patch hasn't already been selected (I.e., it's the first time the threshold is passed)...
       set selected-patch self ; ...selects this patch as the selected patch to move to
@@ -714,26 +747,26 @@ end
 to export-home-range-sizes ; Exporting the HR sizes
 
   ask deer [ set home-range-patches remove-duplicates home-range-patches ] ; Double checks that duplicate patches are removed - possibly redundant but is a nice double check this is hapenning
-  csv:to-file (word "Results/home-range-sizes_still_living_deer_" run-id ".csv") [ (list who (length home-range-patches)) ] of deer ; for still living deer, calculates their HR sizes by the number (length) of unique HR patches landed on
-  csv:to-file (word "Results/home-range-sizes_dead_deer_" run-id ".csv") (list dead-deer-who dead-deer-HR) ; Optional, as above for dead deer - the number of HR patches (i.e., length home-range-patches) is calculated when the deer dies, so doesn't need doing here
+  csv:to-file (word "Results/home-range-sizes_still_living_deer_" run-id "_ticks_" ticks ".csv") [ (list who (length home-range-patches)) ] of deer ; for still living deer, calculates their HR sizes by the number (length) of unique HR patches landed on
+  csv:to-file (word "Results/home-range-sizes_dead_deer_" run-id "_ticks_" ticks ".csv") (list dead-deer-who dead-deer-HR) ; Optional, as above for dead deer - the number of HR patches (i.e., length home-range-patches) is calculated when the deer dies, so doesn't need doing here
 
 end
 
 to export-measures ; Exports pop size and patches explored, the each list is 5 long and has data from 2020-2040 in 5 year gaps
 
-  csv:to-file (word "Results/measures_" run-id ".csv") (list total-deer total-mature-deer total-immature-deer total-patches-visited) ; Exports csv of the total deer pop size (split by mature and immature) and the total patches visited
+  csv:to-file (word "Results/measures_" run-id  "_ticks_" ticks ".csv") (list total-deer total-mature-deer total-immature-deer total-patches-visited) ; Exports csv of the total deer pop size (split by mature and immature) and the total patches visited
 
 end
 
 to export-step-lengths
 
-  csv:to-file (word "Results/step_lengths_" run-id ".csv") (list step-lengths) ; Exports csv of the total deer pop size (split by mature and immature) and the total patches visited
+  csv:to-file (word "Results/step_lengths_" run-id "_ticks_" ticks ".csv") (list step-lengths) ; Exports csv of the total deer pop size (split by mature and immature) and the total patches visited
 
 end
 
 to export-mother-offspring-HR-distances
 
-  csv:to-file (word "Results/mother_offspring_HR_distances_" run-id ".csv") (list mother-offspring-HR-distances) ; Exports csv of the total deer pop size (split by mature and immature) and the total patches visited
+  csv:to-file (word "Results/mother_offspring_HR_distances_" run-id "_ticks_" ticks ".csv") (list mother-offspring-HR-distances) ; Exports csv of the total deer pop size (split by mature and immature) and the total patches visited
 
 end
 
@@ -824,8 +857,8 @@ GRAPHICS-WINDOW
 551
 -879
 879
-0
-0
+1
+1
 1
 ticks
 30.0
@@ -871,7 +904,7 @@ SWITCH
 43
 pen-down?
 pen-down?
-0
+1
 1
 -1000
 
@@ -2306,7 +2339,7 @@ INPUTBOX
 217
 163
 profile-tick-number
-600.0
+5.0
 1
 0
 Number
@@ -2339,7 +2372,7 @@ CHOOSER
 138
 use
 use
-"validation" "prediction"
+"evaluation" "prediction"
 1
 
 CHOOSER
@@ -2350,7 +2383,7 @@ CHOOSER
 scenario
 scenario
 "max" "min"
-1
+0
 
 SLIDER
 1148
@@ -2361,7 +2394,7 @@ sample
 sample
 1
 50
-1.0
+15.0
 1
 1
 NIL
@@ -2724,7 +2757,7 @@ NetLogo 6.3.0
 @#$#@#$#@
 @#$#@#$#@
 <experiments>
-  <experiment name="100 sims - validating until 09/01/2020" repetitions="100" runMetricsEveryStep="true">
+  <experiment name="100 sims - evaluation until 09/01/2020" repetitions="100" runMetricsEveryStep="true">
     <setup>clear-all
 random-seed behaviorspace-run-number
 setup</setup>
@@ -2801,7 +2834,7 @@ setup</setup>
       <value value="-1.0E27"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="pen-down?">
-      <value value="true"/>
+      <value value="false"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="beta-agricultural:step-length:winter:male">
       <value value="0.0493934233556851"/>
@@ -3110,7 +3143,406 @@ setup</setup>
       <value value="0.00965050948976871"/>
     </enumeratedValueSet>
     <enumeratedValueSet variable="use">
-      <value value="&quot;validation&quot;"/>
+      <value value="&quot;evaluation&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;max&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="sample">
+      <value value="1"/>
+    </enumeratedValueSet>
+  </experiment>
+  <experiment name="100 sims - prediction until 2030" repetitions="1" runMetricsEveryStep="true">
+    <setup>clear-all
+random-seed behaviorspace-run-number
+setup</setup>
+    <go>go</go>
+    <exitCondition>hpc-stop = "yes"</exitCondition>
+    <enumeratedValueSet variable="se-agricultural:step-length:winter:female">
+      <value value="0.0493340599672136"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-bare:step-length:summer:male">
+      <value value="0.04190524974611"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-slope:turning-angle">
+      <value value="0.00904324706412455"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-wetlands:turning-angle">
+      <value value="-1.0E27"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-wetlands:step-length:summer:male">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-forest:step-length:summer:male">
+      <value value="0.0353364689035707"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-scrub:turning-angle">
+      <value value="0.102978986301144"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-artificial:step-length:summer:female">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-bare:step-length:summer:male">
+      <value value="-0.034699764413956"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-bare:step-length:winter:female">
+      <value value="-0.0871366331653598"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-forest:step-length:summer:female">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-forest:distance-to-road">
+      <value value="0.0355512366508593"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-slope:summer">
+      <value value="-0.0125029344149241"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-forest:step-length">
+      <value value="0.538532805592645"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-forest:distance-to-road">
+      <value value="0.0267846256015655"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-slope:winter">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-distance-from-release">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-distance-to-road:turning-angle">
+      <value value="0.148379056270227"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-artificial">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-forest:step-length:winter:male">
+      <value value="0.0192610407639364"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-wetlands:step-length">
+      <value value="-1.0E27"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-agricultural:step-length:summer:female">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-wetlands:step-length:winter:female">
+      <value value="-1.0E27"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="pen-down?">
+      <value value="false"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-agricultural:step-length:winter:male">
+      <value value="0.0493934233556851"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-artificial:distance-to-road">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-wetlands">
+      <value value="-1.0E27"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-agricultural:step-length:summer:female">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-distance-to-road:summer">
+      <value value="0.0311010390550127"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-wetlands:step-length:winter:male">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-wetlands:step-length:summer:female">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="annual-birth-prob">
+      <value value="0.65"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-distance-from-release">
+      <value value="-0.5"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-forest:turning-angle">
+      <value value="-0.0262182446074219"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-artificial:turning-angle">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-forest:step-length:winter:female">
+      <value value="0.0182589798551276"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-wetlands:step-length">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-wetlands">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-wetlands:step-length:winter:male">
+      <value value="-1.0E27"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-bare:step-length:summer:female">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-distance-to-road:winter">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-bare:turning-angle">
+      <value value="0.536239697394549"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-agricultural:step-length">
+      <value value="0.568945390616945"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-artificial:step-length:winter:female">
+      <value value="0.118596633849117"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-agricultural">
+      <value value="1.30707643302806"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-bare:step-length">
+      <value value="0.109727569566467"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-slope:step-length">
+      <value value="8.09133311833045E-4"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-forest:step-length:winter:female">
+      <value value="0.0140116992653785"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-agricultural:step-length:winter:male">
+      <value value="0.0832456574391269"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-agricultural:turning-angle">
+      <value value="-0.419708823497002"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-scrub:turning-angle">
+      <value value="0.0327472811652309"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-step-length">
+      <value value="0.107406231285947"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-turning-angle">
+      <value value="-2.78783818828574"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="use">
+      <value value="&quot;evaluation&quot;"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-agricultural:step-length:winter:female">
+      <value value="-0.00251210564434179"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-distance-to-road:winter">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-artificial:turning-angle">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="scenario">
+      <value value="&quot;max&quot;"/>
+      <value value="&quot;min&quot;"/>
+    </enumeratedValueSet>
+    <steppedValueSet variable="sample" first="1" step="1" last="50"/>
+    <enumeratedValueSet variable="beta-agricultural:step-length:summer:male">
+      <value value="0.258758587040516"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-wetlands:turning-angle">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-forest:step-length">
+      <value value="0.106778991169404"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-distance-to-road">
+      <value value="0.0368058860666508"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-scrub:step-length:summer:male">
+      <value value="0.0305614791374753"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-scrub">
+      <value value="0.224727638588186"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-wetlands:distance-to-road">
+      <value value="-1.0E27"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-bare:distance-to-road">
+      <value value="0.0402692245187032"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-scrub:distance-to-road">
+      <value value="-0.04120581757881"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-scrub">
+      <value value="0.609738380725556"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-wetlands:step-length:winter:female">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-artificial:step-length:winter:male">
+      <value value="0.157058170717006"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-distance-to-road">
+      <value value="0.0135678807885984"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-agricultural:turning-angle">
+      <value value="0.108353655332371"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-artificial">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-artificial:step-length:summer:male">
+      <value value="0.233204332453198"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-scrub:step-length:summer:female">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-slope">
+      <value value="0.00183827938722221"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-bare:step-length:winter:female">
+      <value value="0.0372901624933728"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-wetlands:step-length:summer:male">
+      <value value="-1.0E27"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-slope">
+      <value value="0.025518851504783"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-forest">
+      <value value="0.204758649001091"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-artificial:step-length:winter:female">
+      <value value="0.253569683848898"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-agricultural:step-length">
+      <value value="0.112870405981353"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-scrub:step-length:summer:male">
+      <value value="0.117495298879353"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-scrub:step-length">
+      <value value="0.42893733037284"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-bare:step-length:winter:male">
+      <value value="0.0406090448357709"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-distance-to-road:turning-angle">
+      <value value="0.00655605509221779"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-bare">
+      <value value="1.55328679940249"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-scrub:step-length:winter:male">
+      <value value="0.0334920734007395"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-forest:step-length:winter:male">
+      <value value="0.0372591325695567"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-agricultural:step-length:summer:male">
+      <value value="0.0636615555644124"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-bare:step-length:winter:male">
+      <value value="-0.0490732603869804"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-distance-to-road:summer">
+      <value value="0.0877498936684734"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-artificial:step-length">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-bare:turning-angle">
+      <value value="0.104711821024613"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-slope:turning-angle">
+      <value value="0.00125971722362838"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-agricultural">
+      <value value="0.231910053591412"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-bare:step-length:summer:female">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-artificial:step-length:winter:male">
+      <value value="-0.110619540831889"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-scrub:step-length:winter:female">
+      <value value="0.0245729205316433"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-bare:distance-to-road">
+      <value value="-0.191206900814103"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-artificial:distance-to-road">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-forest">
+      <value value="-0.00491848470064734"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-slope:winter">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-step-length">
+      <value value="-0.277981115906896"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-agricultural:distance-to-road">
+      <value value="0.0393866065041926"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-artificial:step-length:summer:female">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-scrub:step-length:winter:male">
+      <value value="0.0271160497875645"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="profile-tick-number">
+      <value value="600"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-lifespan-years">
+      <value value="14"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-wetlands:step-length:summer:female">
+      <value value="-1.0E27"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-artificial:step-length">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-turning-angle">
+      <value value="0.10743227235049"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="max-step-distance">
+      <value value="26"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-artificial:step-length:summer:male">
+      <value value="0.333271935726846"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-forest:turning-angle">
+      <value value="0.102359124697231"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-scrub:step-length:winter:female">
+      <value value="0.0274316880128998"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-bare:step-length">
+      <value value="0.50718636136521"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-scrub:distance-to-road">
+      <value value="0.0375446583250768"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="annual-survival-prob">
+      <value value="0.97"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-wetlands:distance-to-road">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-scrub:step-length">
+      <value value="0.10753258211162"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-bare">
+      <value value="0.252529144111392"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-forest:step-length:summer:female">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-forest:step-length:summer:male">
+      <value value="0.122465917359963"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-agricultural:distance-to-road">
+      <value value="-0.18977662926457"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-scrub:step-length:summer:female">
+      <value value="0"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="se-slope:summer">
+      <value value="0.00221782055170543"/>
+    </enumeratedValueSet>
+    <enumeratedValueSet variable="beta-slope:step-length">
+      <value value="0.00965050948976871"/>
     </enumeratedValueSet>
   </experiment>
 </experiments>

@@ -1,14 +1,14 @@
 #### Loading in data ---------------
 
 # File list to be loaded
-files <- list.files(path = "C:/Users/conno/Documents/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/results/", pattern = "measures_")
+files <- list.files(path = "C:/Users/conno/Documents/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 7 - separate validation and prediction/Results/evaluation/", pattern = "measures_")
 
 # Loading in all the measures files and joining them together
 for (i in 1:length(files)) {
   if (i == 1) { 
-    data <- read.csv(paste0("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/results/", files[i]), header = F)
+    data <- read.csv(paste0("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 7 - separate validation and prediction/Results/evaluation/", files[i]), header = F)
     data$sim_id <- sub("measures_", "", sub(".csv", "", files[i]))
-    colnames(data) <- c("2020", "2025", "2030", "2035", "2040", "sim_id")
+    colnames(data) <- c("2025", "sim_id")
     row.names(data) <- c("deer", "mature_deer", "immature_deer", "visited_patches")
     
     deer <- data[1,]
@@ -25,9 +25,9 @@ for (i in 1:length(files)) {
     
     
   } else {
-    additional_data <- read.csv(paste0("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 6 - bestmodel1&dist2release/results/", files[i]), header = F)
+    additional_data <- read.csv(paste0("~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 7 - separate validation and prediction/Results/evaluation/", files[i]), header = F)
     additional_data$sim_id <- sub("measures_", "", sub(".csv", "", files[i]))
-    colnames(additional_data) <- c("2020", "2025", "2030", "2035", "2040", "sim_id")
+    colnames(additional_data) <- c("2025", "sim_id")
     row.names(additional_data) <- c("deer", "mature_deer", "immature_deer", "visited_patches")
     
     deer <- rbind(deer, additional_data[1,])
@@ -75,10 +75,10 @@ for (s in sample_number) {
   for (r in 1:repeat_number) { # For each repeat number
   
     # Sample with replacement from the deer, mature deer, immature deer, and patch datasets
-    deer_sample <- deer[sample(nrow(deer), s, replace = T), ][, 5] # samples simulations from total deer, mature deer etc dataframes, then only uses 2040
-    mature_sample <- mature_deer[sample(nrow(mature_deer), s, replace = T), ][, 5]
-    immature_sample <- immature_deer[sample(nrow(immature_deer), s, replace = T), ][, 5]
-    patches_sample <- visited_patches[sample(nrow(visited_patches), s, replace = T), ][, 5]
+    deer_sample <- deer[sample(nrow(deer), s, replace = T), ][, 1] # samples simulations from total deer, mature deer etc dataframes, then only uses 2040
+    mature_sample <- mature_deer[sample(nrow(mature_deer), s, replace = T), ][, 1]
+    immature_sample <- immature_deer[sample(nrow(immature_deer), s, replace = T), ][, 1]
+    patches_sample <- visited_patches[sample(nrow(visited_patches), s, replace = T), ][, 1]
 
       # Create the bootstrapped datasets
      if (r == 1) {
@@ -240,64 +240,5 @@ library(patchwork)
 
 (a | b) / (c | d) + plot_layout(nrow = 2)
 
-ggsave(filename = "~/Corsica deer/Manuscript/Tables and figures/bootstrapping.png", 
+ggsave(filename = "~/Corsica deer/Manuscript/Tables and figures/Evaluation/bootstrapping.png", 
        dpi = 1000, units = "in")
-
-#### NOT NEEDED? Bootstrapping each output - HR sizes -----------------
-
-library(dplyr)
-library(stringr)
-
-### Need to load sims in the same order each time
-### Function to extract sim IDs
-extract_id <- function(filename) {
-  as.numeric(stringr::str_extract(filename, "(?<=_)\\d+(?=\\.csv$)"))
-}
-
-# File list to be loaded into R
-files <- list.files(path = "~/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 4 - death/results_final", 
-                    pattern = "home-range-sizes_still", full.names = TRUE)
-
-# Sort files by extracted deer ID
-files <- files[order(sapply(basename(files), extract_id))]
-
-# Read and merge alive deer files
-for (i in seq_along(files)) {
-  d <- read.csv(files[i], header = FALSE)
-  if (i == 1) {
-    alive_home_range_sizes <- d
-  } else {
-    alive_home_range_sizes <- full_join(alive_home_range_sizes, d, by = "V1")
-  }
-}
-
-# Calculating mean of mean HR and sd
-mean_HR_by_sim <- t(as.data.frame(colMeans(alive_home_range_sizes[,-1], na.rm = TRUE)))
-sd_HR_by_sim <- t(as.data.frame(apply(alive_home_range_sizes[,-1], na.rm = TRUE, 2, sd))) # 2 = columns
-alive_HR_by_sim <- rbind(mean_HR_by_sim, sd_HR_by_sim)
-
-# Tidying up
-alive_HR_by_sim <- alive_HR_by_sim[-2,]
-alive_HR_by_sim <- as.vector(alive_HR_by_sim)
-
-## Sampling
-
-sample_number <- 100 # Number of simulations to be sampled (with replacement)
-repeat_number <- 100 # How many times to repeat this sampling
-
-set.seed(1) # Setting random seed
-HR_sample_means <- t(replicate(repeat_number, sample(alive_HR_by_sim, size = sample_number, replace = TRUE))) # Sampling from the simulated mean HRs for mean of means
-
-row.names(sample) <- NULL # No row names
-
-HR_sample_mean_of_means <- rowMeans(HR_sample_means) # Calculating the means of the bootstrapped HR sizes
-
-median(HR_sample_mean_of_means) # median (could use mean)
-max(HR_sample_mean_of_means) - min(HR_sample_mean_of_means) # Range of HR sizes
-
-
-
-
-
-
-
