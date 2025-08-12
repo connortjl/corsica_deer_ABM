@@ -48,7 +48,7 @@ summary(alive_HR_by_sim[2,])
 
 
 
-# Home range sizes - dead deer ---------------------------------
+# Home range sizes - dead deer - not used in manuscript ---------------------------------
 
 library(dplyr)
 library(stringr)
@@ -114,7 +114,7 @@ summary(dead_HR_by_sim[1,])
 summary(dead_HR_by_sim[2,])
 
 
-### Death rates ---------------------------------
+### Death rates - not used in manuscript ---------------------------------
 
 alive_home_range_sizes <- select(alive_home_range_sizes, -deer_id)
 dead_home_range_sizes <- select(dead_home_range_sizes, -deer_id)
@@ -182,7 +182,7 @@ summary(matured_offspring)
 # Number of mature offspring
 
 
-## Population dynamics ---------------------------
+## Population dynamics - not used in manuscript ---------------------------
 
 # File list
 files <- list.files(path = "C:/Users/conno/Documents/Corsica deer/corsica_deer_ABM/Modelling/NetLogo/Model 7 - separate validation and prediction/results/evaluation", 

@@ -75,10 +75,10 @@ load_min_asc_files_by_year <- function() {
   return(rasters_by_year) # Returns a list
 }
 
+# Function to scale all rasters in a nested list (by year)
 
 rasters_by_year_max <- load_max_asc_files_by_year() # Loads all rasters in wd and groups by year
 rasters_by_year_min <- load_min_asc_files_by_year() # Loads all rasters in wd and groups by year
-
 
 # Making individual figures
 
@@ -205,7 +205,7 @@ legend("center",
 for (year in years) {
   maps <- sds(rasters_by_year_max[[as.character(year)]])
   mean_map <- app(maps, mean)
-  mean_map <- crop(mean_map, outline, mask = T)
+  mean_map <- crop(mean_map, outline, mask = TRUE)
   
   plot(mean_map,
        main = paste(year),
@@ -214,9 +214,12 @@ for (year in years) {
        range = c(0, max_mean),
        breaks = breaks_mean,
        legend = FALSE,
-       asp = NA, 
-       axes = F)
+       asp = NA,
+       axes = FALSE)  # Disable default axes
   
+  axis(1, cex.axis = 2.5)  # bottom axis
+  axis(2, cex.axis = 2.5)  # left axis
+  box()
   plot(outline, add = TRUE)
 }
 
@@ -234,7 +237,7 @@ legend("center",
 for (year in years) {
   maps <- sds(rasters_by_year_min[[as.character(year)]])
   mean_map <- app(maps, mean)
-  mean_map <- crop(mean_map, outline, mask = T)
+  mean_map <- crop(mean_map, outline, mask = TRUE)
   
   plot(mean_map,
        main = paste(year),
@@ -243,9 +246,12 @@ for (year in years) {
        range = c(0, max_mean),
        breaks = breaks_mean,
        legend = FALSE,
-       asp = NA, 
-       axes = F)
+       asp = NA,
+       axes = FALSE)
   
+  axis(1, cex.axis = 2.5)
+  axis(2, cex.axis = 2.5)
+  box()
   plot(outline, add = TRUE)
 }
 

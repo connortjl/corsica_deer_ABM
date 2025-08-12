@@ -157,6 +157,9 @@ summary(immature_deer_min)
 #MIN TOTAL GROWTH RATE
 (summary[3,5] / summary[3,1]) ^ (1 / 4) # Annual min deer growth rate - 1.12
 
+# Average
+(((summary[1,5] / summary[1,1]) ^ (1 / 4)) + ((summary[3,5] / summary[3,1]) ^ (1 / 4))) / 2
+
 # MAX MEAN PATCH GROWTH RATE
 (summary[17,5] - summary[17,1]) / 4 # Annual patch growth rate - 16,779
 # MIN PATCH GROWTH RATE
